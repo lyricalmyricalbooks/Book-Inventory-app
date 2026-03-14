@@ -239,9 +239,35 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
   .tab-panel{padding:1rem;}
   .header-stat:nth-child(3){display:none;}
 }
+
+/* PASSWORD GATE */
+#pw-gate{position:fixed;inset:0;z-index:9999;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:1.5rem;}
+#pw-gate .box{width:100%;max-width:360px;text-align:center;}
+#pw-gate .wm{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--cream);margin-bottom:4px;}
+#pw-gate .sub{font-size:9px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--gold2);margin-bottom:2.5rem;}
+#pw-gate input{display:block;width:100%;padding:13px 16px;margin-bottom:10px;font-size:16px;font-family:'Syne',sans-serif;text-align:center;letter-spacing:.08em;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:var(--r2);color:var(--cream);outline:none;transition:border-color .2s,box-shadow .2s;}
+#pw-gate input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,145,58,.18);}
+#pw-gate input.bad{border-color:#f87171 !important;box-shadow:0 0 0 3px rgba(248,113,113,.18) !important;animation:pwshake .35s ease;}
+@keyframes pwshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+#pw-gate button{width:100%;padding:13px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:var(--gold);color:var(--ink);border:none;border-radius:var(--r2);cursor:pointer;transition:background .15s;}
+#pw-gate button:hover{background:var(--gold2);}
+#pw-gate .err{min-height:20px;margin-top:10px;font-family:'DM Mono',monospace;font-size:12px;color:#f87171;}
 </style>
 </head>
 <body>
+
+<!-- PASSWORD GATE -->
+<div id="pw-gate">
+  <div class="box">
+    <div class="wm">Lyricalmyrical Books</div>
+    <div class="sub">Publisher OS</div>
+    <input type="password" id="pw-input" placeholder="Password" onkeydown="if(event.key==='Enter')tryUnlock()">
+    <button onclick="tryUnlock()">Unlock</button>
+    <div class="err" id="pw-err"></div>
+  </div>
+</div>
+
+<div id="pw-app" style="display:none;">
 <div class="app">
 
 <header class="app-header">
@@ -301,6 +327,15 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
     <div class="bar-track"><div class="bar-fill" id="d-bar" style="width:100%;background:var(--gold2);"></div></div>
     <div class="bar-meta"><span id="d-bar-label">— / 120 on hand</span><span>Alert at 15 units</span></div>
     <div class="stock-alert ok" id="d-alert">Loading…</div>
+  </div>
+
+  <div class="sect">Danger zone</div>
+  <div style="background:white;border-radius:var(--r3);border:1px solid var(--border);padding:1.25rem;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:3px;">Reset all sales data</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.5;">Clears orders, history, consignment accounts and resets stock to 120.<br>Your Google Sheet keeps all historical data as a backup.</div>
+    </div>
+    <button class="btn danger-btn" onclick="resetAllData()">⚠ Reset sales data</button>
   </div>
 </div>
 
@@ -392,7 +427,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
           <div style="position:relative;">
             <pre id="gas-code" style="background:var(--ink);color:#a8d8a8;font-family:'DM Mono',monospace;font-size:11px;padding:16px;border-radius:var(--r2);overflow-x:auto;line-height:1.75;border:1px solid rgba(255,255,255,.08);white-space:pre-wrap;">function doPost(e) {
   try {
-    var data = JSON.parse(e.postData.contents);
+    // Reads from form field 'payload' (sent by the app)
+    var data = JSON.parse(e.parameter.payload);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
 
     if (data.type === 'order') {
@@ -480,6 +516,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 </div>
 
 </div><!-- /.app -->
+</div><!-- /#pw-app -->
 
 <!-- MODALS -->
 <div class="overlay" id="m-add-store" style="display:none;"><div class="modal">
@@ -607,21 +644,54 @@ function showSheetsConnected(){
 }
 async function testSheets(){
   if(!sheetsUrl)return;
-  try{
-    await fetch(sheetsUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({type:'order',date:today(),num:'TEST-CONN',chan:'Test',qty:0,price:0,total:0,stockAfter:state.stock,notes:'Connection test — ignore this row'})});
-    addSheetsLog('Test','Connection test','ok');showToast('✓ Sheets connection verified');
-  }catch(e){addSheetsLog('Test','Failed: '+e.message,'err');showToast('Sheets test failed — check URL','err');}
+  formPostToSheets({type:'order',date:today(),num:'TEST-CONN',chan:'Test',qty:0,price:0,total:0,stockAfter:state.stock,notes:'Connection test — ignore this row'});
+  addSheetsLog('Test','Connection test sent','ok');
+  showToast('✓ Test row sent to Sheets — check your sheet!');
 }
-async function syncToSheets(payload){
-  if(!sheetsUrl)return;
-  const summary=payload.type==='order'
-    ?`${payload.num} · ${payload.chan} · ${payload.qty}× · ${fmt(payload.total)}`
-    :`${payload.store} · ${payload.event} · ${payload.qty}×`;
-  try{
-    await fetch(sheetsUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    addSheetsLog(payload.type==='order'?'Order':'Consignment',summary,'ok');
-  }catch(e){addSheetsLog(payload.type==='order'?'Order':'Consignment','Failed: '+e.message,'err');}
+
+// Use a hidden iframe + form POST to avoid CORS — fetch() is blocked by browsers
+// for cross-origin requests to Apps Script even with no-cors mode
+function formPostToSheets(payload){
+  if(!sheetsUrl) return;
+  try {
+    // Create a hidden iframe to absorb the response
+    const iframeId = 'sheets-iframe-'+Date.now();
+    const iframe = document.createElement('iframe');
+    iframe.name = iframeId;
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    setTimeout(()=>{ try{ document.body.removeChild(iframe); }catch(e){} }, 5000);
+
+    // Build a hidden form targeting that iframe
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = sheetsUrl;
+    form.target = iframeId;
+    form.style.display = 'none';
+
+    // Apps Script doPost() reads e.postData.contents, so we send JSON as a field
+    // We update the Apps Script to read from a form field instead
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'payload';
+    input.value = JSON.stringify(payload);
+    form.appendChild(input);
+
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(()=>{ try{ document.body.removeChild(form); }catch(e){} }, 1000);
+  } catch(e) {
+    console.error('Sheets form post failed:', e);
+  }
+}
+
+function syncToSheets(payload){
+  if(!sheetsUrl) return;
+  const summary = payload.type==='order'
+    ? `${payload.num} · ${payload.chan} · ${payload.qty}× · ${fmt(payload.total)}`
+    : `${payload.store} · ${payload.event} · ${payload.qty}×`;
+  formPostToSheets(payload);
+  addSheetsLog(payload.type==='order'?'Order':'Consignment', summary, 'ok');
 }
 function addSheetsLog(type,summary,status){
   sheetsLog.unshift({time:new Date().toLocaleTimeString(),type,summary,status});
@@ -858,7 +928,45 @@ function renderLedger(){
   b.innerHTML=[...state.ledger].reverse().map(e=>`<tr><td style="font-size:12px;color:var(--text3);">${fmtD(e.date)}</td><td style="font-weight:600;">${e.storeName}</td><td>${e.type}</td><td class="r">${e.qty}</td><td class="r">${e.type==='Sale'?e.rate+'%':'—'}</td><td class="r" style="font-weight:600;">${e.amountDue>0?fmt(e.amountDue):'—'}</td><td style="font-size:12px;color:var(--text3);">${e.notes||'—'}</td><td>${pill(e)}${e.status==='pending'?` <button class="btn sm" style="margin-left:6px;" onclick="markPaid(${e.id})">Mark paid</button>`:''}</td></tr>`).join('');
 }
 
-boot();
+// RESET
+function resetAllData(){
+  if(!confirm('This will reset ALL sales data — orders, history, consignment accounts and stock — back to zero/120.\n\nYour Google Sheet will NOT be affected and keeps your full backup.\n\nAre you sure?')) return;
+  if(!confirm('Last chance — this cannot be undone in the app. Reset now?')) return;
+  state={ stock:120, sold:0, revenue:0, chStats:{}, hist:[], stores:[], ledger:[], doneIds:[] };
+  lastSavedHash='';
+  renderAll();
+  saveState();
+  showToast('✓ Data reset. Google Sheet backup is untouched.', 'warn', 4000);
+}
+
+// PASSWORD
+const CORRECT = '12345';
+function tryUnlock(){
+  const inp = document.getElementById('pw-input');
+  const err = document.getElementById('pw-err');
+  if(inp.value === CORRECT){
+    sessionStorage.setItem('lm-unlocked','yes');
+    document.getElementById('pw-gate').style.display='none';
+    document.getElementById('pw-app').style.display='';
+    boot();
+  } else {
+    inp.value='';
+    err.textContent='Wrong password, try again.';
+    inp.classList.remove('bad');
+    void inp.offsetWidth; // force reflow to restart animation
+    inp.classList.add('bad');
+    setTimeout(()=>{ inp.classList.remove('bad'); err.textContent=''; }, 2000);
+  }
+}
+
+// On load — skip gate if already unlocked this session
+if(sessionStorage.getItem('lm-unlocked')==='yes'){
+  document.getElementById('pw-gate').style.display='none';
+  document.getElementById('pw-app').style.display='';
+  boot();
+} else {
+  document.getElementById('pw-input').focus();
+}
 </script>
 </body>
 </html>
