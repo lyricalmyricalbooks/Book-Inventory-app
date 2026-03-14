@@ -5,16 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lyricalmyrical Books · Publisher OS</title>
 
-<!-- ═══════════════════════════════════════════════════════════════════
-     FIREBASE SETUP — replace the config values below with yours
-     Go to: console.firebase.google.com
-     → Your project → Project Settings → Your apps → Config
-  ═══════════════════════════════════════════════════════════════════ -->
+<!-- Firebase -->
 <script type="module">
-  import { initializeApp }        from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, set, onValue, get }
-                                   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+                              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
   const firebaseConfig = {
     apiKey:            "AIzaSyB0BTOjfUFZKCVth9eR8iN0mvfkpRIFKSI",
     authDomain:        "lyricalmyrical-37c46.firebaseapp.com",
@@ -24,290 +19,474 @@
     messagingSenderId: "448719824639",
     appId:             "1:448719824639:web:2aa79291b13bf6716ececa"
   };
-
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
   const STATE_REF = ref(db, 'lyrical/state');
-
-  // Save full state blob to Firebase
-  window._fbSave = async (json) => {
-    await set(STATE_REF, { data: json, ts: Date.now() });
-  };
-
-  // One-time load
-  window._fbLoad = async () => {
-    const snap = await get(STATE_REF);
-    return snap.exists() ? snap.val().data : null;
-  };
-
-  // Real-time listener — calls callback(json) whenever any user saves
-  window._fbWatch = (callback) => {
-    onValue(STATE_REF, (snap) => {
-      if (snap.exists()) callback(snap.val().data);
-    });
-  };
-
-  // Signal the main app that Firebase is ready
+  window._fbSave  = async (json) => { await set(STATE_REF, { data: json, ts: Date.now() }); };
+  window._fbLoad  = async () => { const s = await get(STATE_REF); return s.exists() ? s.val().data : null; };
+  window._fbWatch = (cb) => { onValue(STATE_REF, s => { if (s.exists()) cb(s.val().data); }); };
   window._fbReady = true;
   document.dispatchEvent(new Event('firebase-ready'));
 </script>
-</head>
-<body>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap');
 :root {
-  --ink:#0a0906;--ink2:#1a1714;--ink3:#2c2824;
-  --surface:#f5f0e8;--surface2:#ede8df;--surface3:#e3ddd3;
-  --gold:#c9963a;--gold2:#e8b455;--gold-dim:rgba(201,150,58,0.12);--gold-glow:rgba(201,150,58,0.25);
-  --text:#0a0906;--text2:#5a5347;--text3:#8c837a;
-  --green:#2d6a4f;--green-bg:#d8f3dc;--red:#9b2226;--red-bg:#ffddd2;
-  --amber-bg:#fff3b0;--amber-text:#7b5c00;--blue-bg:#dde8f0;--blue-text:#1a4870;
-  --border:rgba(10,9,6,0.1);--border2:rgba(10,9,6,0.06);--r:6px;--r2:10px;
+  --ink:#0e0c0a; --ink2:#1c1917; --ink3:#2a2723; --ink4:#3d3a35;
+  --cream:#f7f2e9; --cream2:#efe9dc; --cream3:#e5ddd0; --cream4:#d9d0c2;
+  --gold:#c8913a; --gold2:#e5a93f; --gold3:#f0c060;
+  --gold-bg:rgba(200,145,58,.1); --gold-line:rgba(200,145,58,.25);
+  --text:#0e0c0a; --text2:#4a4540; --text3:#8a8078; --text4:#b8b0a5;
+  --green:#2a6348; --green-bg:#d4eddf;
+  --red:#952020; --red-bg:#fad8d8;
+  --amber:#7a5500; --amber-bg:#fef3c7;
+  --blue:#1a4472; --blue-bg:#dbe8f5;
+  --border:rgba(14,12,10,.09); --border2:rgba(14,12,10,.05);
+  --r:5px; --r2:10px; --r3:16px;
+  --shadow:0 2px 12px rgba(14,12,10,.07);
+  --shadow2:0 8px 32px rgba(14,12,10,.12);
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-.app{background:var(--surface);font-family:'Outfit',sans-serif;color:var(--text);padding-bottom:3rem;}
-.app-header{background:var(--ink);padding:0 1.5rem;display:flex;align-items:stretch;justify-content:space-between;gap:1rem;border-bottom:1px solid rgba(201,150,58,0.3);}
-.header-brand{display:flex;flex-direction:column;justify-content:center;padding:1.1rem 0;}
-.header-wordmark{font-family:'DM Serif Display',serif;font-size:17px;color:var(--surface);letter-spacing:.01em;line-height:1;}
-.header-sub{font-size:10px;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-top:4px;font-weight:500;}
-.header-right{display:flex;align-items:center;gap:0;}
-.header-stat{text-align:right;padding:.8rem 0 .8rem 1.5rem;border-left:1px solid rgba(255,255,255,0.08);}
-.header-stat .hs-val{font-family:'DM Mono',monospace;font-size:18px;color:var(--gold2);font-weight:500;line-height:1;}
-.header-stat .hs-label{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:.1em;text-transform:uppercase;margin-top:3px;}
-.sync-bar{background:var(--ink3);border-bottom:1px solid rgba(255,255,255,0.05);padding:5px 1.5rem;display:flex;align-items:center;gap:10px;font-size:11px;font-family:'DM Mono',monospace;}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:#52b788;flex-shrink:0;transition:background .3s;}
-.sync-dot.syncing{background:var(--gold2);animation:pulse .8s ease-in-out infinite;}
-.sync-dot.error{background:#e76f51;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.sync-label{color:rgba(255,255,255,.35);flex:1;}
-.sync-label b{color:rgba(255,255,255,.6);}
-.sync-time{color:rgba(255,255,255,.2);font-size:10px;}
-.tab-bar{background:var(--ink2);display:flex;padding:0 1.5rem;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,0.05);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--cream);font-family:'Syne',sans-serif;color:var(--text);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");background-size:200px 200px;opacity:.5;}
+.app{position:relative;z-index:1;}
+
+/* HEADER */
+.app-header{background:var(--ink);padding:0 2rem;display:flex;align-items:stretch;justify-content:space-between;gap:1.5rem;border-bottom:1px solid rgba(200,145,58,.2);position:sticky;top:0;z-index:100;}
+.header-brand{display:flex;flex-direction:column;justify-content:center;padding:1.1rem 0;gap:4px;}
+.header-wordmark{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--cream);letter-spacing:.01em;line-height:1;}
+.header-tag{font-size:9px;font-weight:600;color:var(--gold2);letter-spacing:.22em;text-transform:uppercase;}
+.header-right{display:flex;align-items:stretch;}
+.header-stat{display:flex;flex-direction:column;justify-content:center;text-align:right;padding:.75rem 0 .75rem 1.75rem;border-left:1px solid rgba(255,255,255,.06);}
+.hs-val{font-family:'DM Mono',monospace;font-size:19px;font-weight:500;color:var(--gold3);line-height:1;}
+.hs-label{font-size:9px;font-weight:600;color:rgba(255,255,255,.3);letter-spacing:.14em;text-transform:uppercase;margin-top:4px;}
+
+/* SYNC BAR */
+.sync-bar{background:var(--ink2);border-bottom:1px solid rgba(255,255,255,.04);padding:5px 2rem;display:flex;align-items:center;gap:10px;font-size:11px;font-family:'DM Mono',monospace;flex-wrap:wrap;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0;transition:background .3s;}
+.sync-dot.syncing{background:var(--gold2);animation:blink .8s ease-in-out infinite;}
+.sync-dot.error{background:#f87171;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.sync-label{color:rgba(255,255,255,.3);flex:1;}
+.sync-label b{color:rgba(255,255,255,.55);}
+.sync-time{color:rgba(255,255,255,.18);font-size:10px;}
+.sheets-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:600;letter-spacing:.04em;background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.2);transition:all .3s;white-space:nowrap;}
+.sheets-badge.warn{background:rgba(251,191,36,.12);color:#fbbf24;border-color:rgba(251,191,36,.2);}
+.sheets-badge.off{background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);border-color:rgba(255,255,255,.08);}
+
+/* TABS */
+.tab-bar{background:var(--ink2);display:flex;padding:0 2rem;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.04);}
 .tab-bar::-webkit-scrollbar{display:none;}
-.tab-btn{padding:.75rem 1.1rem;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.35);cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;white-space:nowrap;font-family:'Outfit',sans-serif;background:none;border-top:none;border-left:none;border-right:none;}
-.tab-btn:hover{color:rgba(255,255,255,.65);}
-.tab-btn.active{color:var(--gold2);border-bottom-color:var(--gold);}
-.tab-panel{display:none;padding:1.5rem;}
-.tab-panel.active{display:block;animation:fadeUp .25s ease;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:1.25rem;}
-.kpi{background:var(--ink);border-radius:var(--r2);padding:1.1rem 1.25rem;position:relative;overflow:hidden;}
-.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.4;}
-.kpi-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:8px;font-weight:500;}
-.kpi-value{font-family:'DM Mono',monospace;font-size:26px;font-weight:500;color:var(--surface);line-height:1;}
-.kpi-value.gold{color:var(--gold2);}
-.kpi-value.warn{color:#f4a261;}
-.kpi-value.danger{color:#e76f51;}
-.kpi-sub{font-size:11px;color:rgba(255,255,255,.25);margin-top:5px;}
-.sect{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);}
-.tbl-wrap{border-radius:var(--r2);overflow:hidden;border:1px solid var(--border);margin-bottom:1.25rem;}
+.tab-btn{padding:.7rem 1.1rem;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.28);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;transition:color .18s,border-color .18s;white-space:nowrap;font-family:'Syne',sans-serif;}
+.tab-btn:hover{color:rgba(255,255,255,.6);}
+.tab-btn.active{color:var(--gold3);border-bottom-color:var(--gold2);}
+
+/* PANELS */
+.tab-panel{display:none;padding:2rem;max-width:1200px;margin:0 auto;}
+.tab-panel.active{display:block;animation:slideUp .22s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:1.5rem;}
+.kpi{background:var(--ink);border-radius:var(--r3);padding:1.25rem 1.4rem;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.04);transition:transform .15s,box-shadow .15s;}
+.kpi:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.2);}
+.kpi::before{content:'';position:absolute;top:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.5;}
+.kpi-label{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:10px;}
+.kpi-value{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--cream);line-height:1;letter-spacing:-.01em;}
+.kpi-value.gold{color:var(--gold3);}
+.kpi-value.warn{color:#fb923c;}
+.kpi-value.danger{color:#f87171;}
+.kpi-sub{font-size:11px;color:rgba(255,255,255,.22);margin-top:7px;}
+
+/* SECTION HEADING */
+.sect{display:flex;align-items:center;gap:10px;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);margin-bottom:1rem;}
+.sect::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* TABLES */
+.tbl-wrap{border-radius:var(--r2);overflow:hidden;border:1px solid var(--border);margin-bottom:1.5rem;box-shadow:var(--shadow);}
 .tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .tbl thead{background:var(--ink);}
-.tbl th{padding:9px 14px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);text-align:left;}
+.tbl th{padding:10px 16px;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);text-align:left;white-space:nowrap;}
 .tbl th.r{text-align:right;}
-.tbl td{padding:10px 14px;border-bottom:1px solid var(--border2);color:var(--text);vertical-align:middle;}
+.tbl td{padding:11px 16px;border-bottom:1px solid var(--border2);color:var(--text);vertical-align:middle;}
 .tbl td.r{text-align:right;font-family:'DM Mono',monospace;font-size:12px;}
 .tbl tbody tr:last-child td{border-bottom:none;}
-.tbl tbody tr:hover td{background:var(--surface2);}
-.mono{font-family:'DM Mono',monospace;font-size:12px;}
-.stock-block{background:var(--ink);border-radius:var(--r2);padding:1.25rem;margin-bottom:1.25rem;position:relative;overflow:hidden;}
-.stock-block::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top right,rgba(201,150,58,.06),transparent 60%);pointer-events:none;}
-.stock-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--surface);margin-bottom:2px;}
-.stock-author{font-size:11px;color:rgba(255,255,255,.3);letter-spacing:.06em;margin-bottom:1rem;}
-.bar-track{background:rgba(255,255,255,.08);border-radius:100px;height:6px;margin-bottom:8px;overflow:hidden;}
-.bar-fill{height:6px;border-radius:100px;transition:width .6s cubic-bezier(.16,1,.3,1),background .4s;}
-.bar-meta{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.3);}
-.stock-alert{margin-top:1rem;padding:8px 12px;border-radius:var(--r);font-size:12px;font-weight:500;border-left:3px solid;}
-.stock-alert.ok{background:rgba(45,106,79,.2);color:#74c69d;border-left-color:#52b788;}
-.stock-alert.warn{background:rgba(244,162,97,.15);color:#f4a261;border-left-color:#f4a261;}
-.stock-alert.danger{background:rgba(231,111,81,.15);color:#e76f51;border-left-color:#e76f51;}
-.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:.04em;}
+.tbl tbody tr{background:white;transition:background .12s;}
+.tbl tbody tr:hover td{background:var(--cream2);}
+
+/* STOCK BLOCK */
+.stock-block{background:var(--ink);border-radius:var(--r3);padding:1.5rem;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.04);margin-bottom:1.5rem;}
+.stock-block::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top right,rgba(200,145,58,.07),transparent 55%);pointer-events:none;}
+.stock-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--cream);margin-bottom:2px;}
+.stock-author{font-size:11px;color:rgba(255,255,255,.28);letter-spacing:.05em;margin-bottom:1.25rem;}
+.bar-track{background:rgba(255,255,255,.07);border-radius:100px;height:5px;margin-bottom:10px;overflow:hidden;}
+.bar-fill{height:5px;border-radius:100px;transition:width .7s cubic-bezier(.16,1,.3,1),background .4s;}
+.bar-meta{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.28);}
+.stock-alert{margin-top:1.1rem;padding:9px 14px;border-radius:var(--r);font-size:12px;font-weight:500;border-left:3px solid;}
+.stock-alert.ok{background:rgba(42,99,72,.25);color:#6ee7a8;border-left-color:#4ade80;}
+.stock-alert.warn{background:rgba(251,146,60,.12);color:#fb923c;border-left-color:#fb923c;}
+.stock-alert.danger{background:rgba(248,113,113,.12);color:#f87171;border-left-color:#f87171;}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:.04em;white-space:nowrap;}
 .pill.green{background:var(--green-bg);color:var(--green);}
-.pill.amber{background:var(--amber-bg);color:var(--amber-text);}
+.pill.amber{background:var(--amber-bg);color:var(--amber);}
 .pill.red{background:var(--red-bg);color:var(--red);}
-.pill.gray{background:var(--surface3);color:var(--text3);}
-.pill.blue{background:var(--blue-bg);color:var(--blue-text);}
-.pill.gold{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(201,150,58,.3);}
-.btn{font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:8px 16px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;transition:all .15s;white-space:nowrap;}
-.btn:hover{background:var(--surface3);}
+.pill.gray{background:var(--cream3);color:var(--text3);}
+.pill.blue{background:var(--blue-bg);color:var(--blue);}
+.pill.gold{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-line);}
+
+/* BUTTONS */
+.btn{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:8px 16px;border-radius:var(--r2);border:1px solid var(--border);background:var(--cream2);color:var(--text);cursor:pointer;transition:all .14s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{background:var(--cream3);}
 .btn.gold{background:var(--gold);color:var(--ink);border-color:var(--gold);}
-.btn.gold:hover{background:var(--gold2);}
-.btn.ink{background:var(--ink);color:var(--surface);border-color:var(--ink);}
+.btn.gold:hover{background:var(--gold2);border-color:var(--gold2);}
+.btn.ink{background:var(--ink);color:var(--cream);border-color:var(--ink);}
 .btn.ink:hover{background:var(--ink3);}
-.btn.ghost-gold{background:var(--gold-dim);color:var(--gold);border-color:rgba(201,150,58,.3);}
-.btn.danger-btn{background:var(--red-bg);color:var(--red);border-color:rgba(155,34,38,.2);}
-.btn.danger-btn:hover{background:#ffc9ba;}
-.btn.sm{padding:5px 11px;font-size:11px;}
+.btn.danger-btn{background:var(--red-bg);color:var(--red);border-color:rgba(149,32,32,.2);}
+.btn.danger-btn:hover{background:#f5c0c0;}
+.btn.sm{padding:5px 11px;font-size:10px;border-radius:var(--r);}
 .btn:disabled{opacity:.35;cursor:not-allowed;}
-.card{background:#fff;border-radius:var(--r2);border:1px solid var(--border);padding:1.25rem;margin-bottom:1rem;}
-.form-group label{display:block;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 12px;font-size:13px;font-family:'Outfit',sans-serif;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);transition:border-color .15s,box-shadow .15s;outline:none;}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim);}
+
+/* CARDS / FORMS */
+.card{background:white;border-radius:var(--r3);border:1px solid var(--border);padding:1.4rem;margin-bottom:1.1rem;box-shadow:var(--shadow);}
+.form-group label{display:block;font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 13px;font-size:13px;font-family:'Syne',sans-serif;border:1px solid var(--border);border-radius:var(--r2);background:var(--cream);color:var(--text);transition:border-color .15s,box-shadow .15s;outline:none;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,145,58,.12);}
 .form-group textarea{resize:vertical;min-height:60px;}
 .price-wrap{position:relative;}
-.price-wrap .sym{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text3);pointer-events:none;}
-.price-wrap input{padding-left:24px;}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-.g4{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;}
-.log-console{background:var(--ink);border-radius:var(--r);padding:10px 14px;font-size:11px;font-family:'DM Mono',monospace;max-height:100px;overflow-y:auto;line-height:2;display:none;margin-top:1rem;border:1px solid rgba(255,255,255,.05);}
+.price-wrap .sym{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text3);pointer-events:none;font-family:'DM Mono',monospace;}
+.price-wrap input{padding-left:26px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;}
+
+/* LOG */
+.log-console{background:var(--ink);border-radius:var(--r2);padding:10px 14px;font-size:11px;font-family:'DM Mono',monospace;max-height:90px;overflow-y:auto;line-height:2;display:none;margin-top:1rem;border:1px solid rgba(255,255,255,.05);}
 .log-line{display:block;}
-.log-line.ok{color:#74c69d;}
-.log-line.warn{color:#f4a261;}
-.store-card{background:#fff;border-radius:var(--r2);border:1px solid var(--border);padding:1.25rem;margin-bottom:12px;transition:box-shadow .2s,border-color .2s;}
-.store-card:hover{border-color:rgba(201,150,58,.4);box-shadow:0 4px 20px rgba(201,150,58,.08);}
+.log-line.ok{color:#6ee7a8;}
+.log-line.warn{color:#fb923c;}
+.log-line.err{color:#f87171;}
+
+/* STORE CARDS */
+.store-card{background:white;border-radius:var(--r3);border:1px solid var(--border);padding:1.4rem;margin-bottom:14px;box-shadow:var(--shadow);transition:box-shadow .18s,border-color .18s;}
+.store-card:hover{border-color:var(--gold-line);box-shadow:0 6px 24px rgba(200,145,58,.1);}
 .store-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;}
-.store-name{font-family:'DM Serif Display',serif;font-size:16px;color:var(--text);}
-.store-meta{font-size:11px;color:var(--text3);margin-top:3px;}
+.store-name{font-family:'Playfair Display',serif;font-size:17px;color:var(--text);}
+.store-meta{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.5;}
 .store-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem;}
-.sk{background:var(--surface2);border-radius:var(--r);padding:8px 10px;}
-.sk-l{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:3px;}
-.sk-v{font-family:'DM Mono',monospace;font-size:17px;font-weight:500;color:var(--text);}
+.sk{background:var(--cream);border-radius:var(--r2);padding:9px 11px;border:1px solid var(--border2);}
+.sk-l{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:4px;}
+.sk-v{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--text);}
 .sk-v.warn{color:#c05e00;}
 .store-actions{display:flex;gap:8px;flex-wrap:wrap;}
-.divider{height:1px;background:var(--border2);margin:1rem 0;}
-.order-card{background:#fff;border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--r2);padding:1rem 1.25rem;margin-bottom:10px;transition:box-shadow .15s;}
-.order-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.06);}
-.order-card.done{border-left-color:var(--border);opacity:.55;}
+
+/* ORDER CARDS */
+.order-card{background:white;border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--r2);padding:1rem 1.25rem;margin-bottom:10px;box-shadow:var(--shadow);transition:box-shadow .15s;}
+.order-card:hover{box-shadow:var(--shadow2);}
+.order-card.done{border-left-color:var(--border);opacity:.5;}
 .order-row{display:flex;justify-content:space-between;align-items:center;}
 .order-num{font-weight:600;font-size:13px;}
 .order-meta{font-size:12px;color:var(--text3);margin-top:2px;}
-.overlay{position:fixed;inset:0;background:rgba(10,9,6,.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:200;}
-.modal{background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:1.75rem;width:100%;max-width:480px;box-shadow:0 24px 64px rgba(0,0,0,.2);}
-.modal-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text);margin-bottom:1.25rem;}
+
+/* SHEETS SETUP */
+.sheets-setup{background:white;border-radius:var(--r3);border:1px solid var(--border);padding:1.5rem;margin-bottom:1.5rem;box-shadow:var(--shadow);}
+.sheets-setup.connected{background:linear-gradient(135deg,#f0fdf6,#fff);border-color:rgba(42,99,72,.2);}
+.sheets-url-row{display:flex;gap:10px;align-items:flex-end;}
+.sheets-url-row .form-group{flex:1;margin:0;}
+.sheets-log-tbl{width:100%;border-collapse:collapse;font-size:12px;font-family:'DM Mono',monospace;}
+.sheets-log-tbl th{text-align:left;padding:7px 12px;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);}
+.sheets-log-tbl td{padding:7px 12px;border-bottom:1px solid var(--border2);vertical-align:middle;}
+.sheets-log-tbl tr:last-child td{border-bottom:none;}
+.log-status{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;}
+.log-status.ok{background:#4ade80;}
+.log-status.err{background:#f87171;}
+
+/* MODALS */
+.overlay{position:fixed;inset:0;background:rgba(14,12,10,.65);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:200;}
+.modal{background:var(--cream);border-radius:var(--r3);border:1px solid var(--border);padding:2rem;width:100%;max-width:500px;box-shadow:0 32px 80px rgba(0,0,0,.25);animation:modalIn .2s ease;}
+@keyframes modalIn{from{opacity:0;transform:scale(.97) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--text);margin-bottom:1.4rem;}
 .modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:1.5rem;}
-.empty-state{text-align:center;padding:3rem 1rem;color:var(--text3);font-size:14px;}
-.empty-state .e-icon{font-size:32px;margin-bottom:.75rem;opacity:.4;}
-.spinner{display:inline-block;width:11px;height:11px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:5px;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.row-between{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;}
-.section-hed{font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);}
-.hint-text{font-size:11px;color:var(--text3);margin-top:5px;}
-.hint-text.amber{color:#c05e00;}
-.save-indicator{font-size:11px;color:var(--gold);opacity:0;transition:opacity .3s;margin-left:8px;font-family:'DM Mono',monospace;}
+
+/* MISC */
+.divider{height:1px;background:var(--border);margin:1.25rem 0;}
+.row-between{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+.section-hed{font-family:'Playfair Display',serif;font-size:20px;color:var(--text);}
+.hint-text{font-size:11px;color:var(--text3);margin-top:6px;}
+.hint-text.amber{color:#92400e;}
+.save-indicator{font-size:11px;color:var(--gold);opacity:0;transition:opacity .3s;font-family:'DM Mono',monospace;}
 .save-indicator.show{opacity:1;}
-.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--ink);color:var(--surface);font-size:12px;font-family:'DM Mono',monospace;padding:10px 16px;border-radius:var(--r2);border-left:3px solid #52b788;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:300;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;pointer-events:none;}
+.mono{font-family:'DM Mono',monospace;font-size:12px;}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text3);font-size:14px;}
+.empty-state .e-icon{font-size:36px;margin-bottom:.75rem;opacity:.35;}
+.spinner{display:inline-block;width:11px;height:11px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .65s linear infinite;vertical-align:middle;margin-right:5px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.row-between{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--ink);color:var(--cream);font-size:12px;font-family:'DM Mono',monospace;padding:11px 18px;border-radius:var(--r2);border-left:3px solid #4ade80;box-shadow:var(--shadow2);z-index:300;opacity:0;transform:translateY(10px);transition:opacity .22s,transform .22s;pointer-events:none;max-width:320px;}
 .toast.show{opacity:1;transform:translateY(0);}
-.fb-notice{background:rgba(201,150,58,.08);border:1px solid rgba(201,150,58,.25);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--amber-text);margin-bottom:1rem;display:none;}
-.fb-notice.show{display:block;}
+.toast.warn{border-left-color:#fb923c;}
+.toast.err{border-left-color:#f87171;}
+
+@media(max-width:640px){
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+  .g4{grid-template-columns:1fr 1fr;}
+  .app-header{padding:0 1rem;}
+  .tab-panel{padding:1rem;}
+  .header-stat:nth-child(3){display:none;}
+}
 </style>
-
+</head>
+<body>
 <div class="app">
-  <div class="app-header">
-    <div class="header-brand">
-      <div class="header-wordmark">Lyricalmyrical Books</div>
-      <div class="header-sub" id="hdr-sub">Publisher OS · Connecting...</div>
-    </div>
-    <div class="header-right">
-      <div class="header-stat"><div class="hs-val" id="h-stock">—</div><div class="hs-label">On hand</div></div>
-      <div class="header-stat"><div class="hs-val" id="h-revenue">—</div><div class="hs-label">Revenue</div></div>
-      <div class="header-stat"><div class="hs-val" id="h-consigned">—</div><div class="hs-label">Consigned</div></div>
-    </div>
-  </div>
 
-  <div class="sync-bar">
-    <div class="sync-dot syncing" id="sync-dot"></div>
-    <div class="sync-label" id="sync-label"><b>Firebase</b> · connecting...</div>
-    <div class="sync-time" id="sync-time"></div>
-    <button class="btn sm" style="font-size:10px;padding:3px 9px;" onclick="forceSync()">↺ Refresh</button>
+<header class="app-header">
+  <div class="header-brand">
+    <div class="header-wordmark">Lyricalmyrical Books</div>
+    <div class="header-tag" id="hdr-sub">Publisher OS · connecting…</div>
   </div>
-
-  <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
-    <button class="tab-btn" onclick="switchTab('website')">Website orders</button>
-    <button class="tab-btn" onclick="switchTab('manual')">Manual entry</button>
-    <button class="tab-btn" onclick="switchTab('consignment')">Consignment</button>
-    <button class="tab-btn" onclick="switchTab('history')">History</button>
+  <div class="header-right">
+    <div class="header-stat"><div class="hs-val" id="h-stock">—</div><div class="hs-label">On hand</div></div>
+    <div class="header-stat"><div class="hs-val" id="h-revenue">—</div><div class="hs-label">Revenue</div></div>
+    <div class="header-stat"><div class="hs-val" id="h-consigned">—</div><div class="hs-label">Consigned</div></div>
   </div>
+</header>
 
-  <div class="tab-panel active" id="tab-dashboard">
-    <div class="fb-notice" id="fb-notice">⚠ Firebase not configured yet — data is not being saved. Add your Firebase config to index.html to enable live sync.</div>
-    <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">Stock on hand</div><div class="kpi-value gold" id="d-stock">—</div><div class="kpi-sub">of 120 printed</div></div>
-      <div class="kpi"><div class="kpi-label">Revenue</div><div class="kpi-value gold" id="d-revenue">—</div><div class="kpi-sub">publisher net</div></div>
-      <div class="kpi"><div class="kpi-label">Units sold</div><div class="kpi-value" id="d-sold">—</div><div class="kpi-sub" id="d-avg-sub">avg price —</div></div>
-      <div class="kpi"><div class="kpi-label">On consignment</div><div class="kpi-value" id="d-consigned">—</div><div class="kpi-sub">across <span id="d-stores">0</span> stores</div></div>
-      <div class="kpi"><div class="kpi-label">Owed to you</div><div class="kpi-value warn" id="d-owed">—</div><div class="kpi-sub">consignment pending</div></div>
-      <div class="kpi"><div class="kpi-label">Low stock</div><div class="kpi-value" id="d-low">—</div><div class="kpi-sub">threshold: 15 units</div></div>
-    </div>
-    <div class="sect">Sales by channel</div>
-    <div class="tbl-wrap" style="margin-bottom:1.25rem;">
-      <table class="tbl"><thead><tr><th>Channel</th><th class="r">Transactions</th><th class="r">Units</th><th class="r">Revenue</th></tr></thead><tbody id="ch-body"></tbody></table>
-    </div>
-    <div class="sect">Consignment at a glance</div>
-    <div class="tbl-wrap" style="margin-bottom:1.25rem;">
-      <table class="tbl"><thead><tr><th>Store</th><th class="r">Sent</th><th class="r">Sold</th><th class="r">Returned</th><th class="r">Outstanding</th><th>Status</th></tr></thead><tbody id="dash-con-body"></tbody></table>
-    </div>
-    <div class="sect">Inventory</div>
-    <div class="stock-block">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
-        <div><div class="stock-title">Un Fantastico Altrove</div><div class="stock-author">Silvia Clo Di Gregorio &nbsp;·&nbsp; List price €40.00</div></div>
-        <div class="pill gold">ISBN 978-88-XXXXXX</div>
-      </div>
-      <div class="bar-track"><div class="bar-fill" id="d-bar" style="width:100%;background:var(--gold);"></div></div>
-      <div class="bar-meta"><span id="d-bar-label">— / 120 on hand</span><span>Alert: 15 units</span></div>
-      <div class="stock-alert ok" id="d-alert">Loading...</div>
-    </div>
+<div class="sync-bar">
+  <div class="sync-dot syncing" id="sync-dot"></div>
+  <div class="sync-label" id="sync-label"><b>Firebase</b> · connecting…</div>
+  <div class="sync-time" id="sync-time"></div>
+  <span class="sheets-badge off" id="sheets-badge">📊 Sheets: not set up</span>
+  <button class="btn sm" style="font-size:10px;padding:3px 9px;background:transparent;color:rgba(255,255,255,.35);border-color:rgba(255,255,255,.1);" onclick="forceSync()">↺ Refresh</button>
+</div>
+
+<nav class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+  <button class="tab-btn" onclick="switchTab('website')">Website orders</button>
+  <button class="tab-btn" onclick="switchTab('manual')">Manual entry</button>
+  <button class="tab-btn" onclick="switchTab('consignment')">Consignment</button>
+  <button class="tab-btn" onclick="switchTab('history')">History</button>
+  <button class="tab-btn" onclick="switchTab('sheets')">📊 Google Sheets</button>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="tab-panel active" id="tab-dashboard">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Stock on hand</div><div class="kpi-value gold" id="d-stock">—</div><div class="kpi-sub">of 120 printed</div></div>
+    <div class="kpi"><div class="kpi-label">Revenue</div><div class="kpi-value gold" id="d-revenue">—</div><div class="kpi-sub">publisher net</div></div>
+    <div class="kpi"><div class="kpi-label">Units sold</div><div class="kpi-value" id="d-sold">—</div><div class="kpi-sub" id="d-avg-sub">avg —</div></div>
+    <div class="kpi"><div class="kpi-label">On consignment</div><div class="kpi-value" id="d-consigned">—</div><div class="kpi-sub">across <span id="d-stores">0</span> stores</div></div>
+    <div class="kpi"><div class="kpi-label">Owed to you</div><div class="kpi-value warn" id="d-owed">—</div><div class="kpi-sub">consignment pending</div></div>
+    <div class="kpi"><div class="kpi-label">Stock status</div><div class="kpi-value" id="d-low">—</div><div class="kpi-sub">threshold: 15 units</div></div>
   </div>
-
-  <div class="tab-panel" id="tab-website">
-    <div class="row-between"><div class="section-hed">Big Cartel orders</div><button class="btn ink" id="scan-btn" onclick="fetchOrders()">Scan Gmail</button></div>
-    <div id="orders-list"><div class="empty-state"><div class="e-icon">📬</div>Press "Scan Gmail" to pull in new orders.</div></div>
-    <button class="btn gold" id="apply-all-btn" onclick="applyAll()" disabled style="width:100%;margin-top:4px;">Apply all new orders</button>
-    <div class="log-console" id="log-web"></div>
+  <div class="sect">Sales by channel</div>
+  <div class="tbl-wrap">
+    <table class="tbl"><thead><tr><th>Channel</th><th class="r">Transactions</th><th class="r">Units</th><th class="r">Revenue</th></tr></thead><tbody id="ch-body"></tbody></table>
   </div>
-
-  <div class="tab-panel" id="tab-manual">
-    <div class="section-hed" style="margin-bottom:1rem;">Log an order</div>
-    <div class="card">
-      <div class="g4" style="margin-bottom:10px;">
-        <div class="form-group"><label>Order #</label><input type="text" id="m-num" placeholder="optional"></div>
-        <div class="form-group"><label>Qty</label><input type="number" id="m-qty" value="1" min="1" oninput="phint()"></div>
-        <div class="form-group"><label>Price paid (€)</label><div class="price-wrap"><span class="sym">€</span><input type="number" id="m-price" value="40.00" step="0.01" oninput="phint()"></div></div>
-        <div class="form-group"><label>&nbsp;</label><button class="btn gold" style="width:100%;height:36px;" onclick="submitManual()">Add</button></div>
-      </div>
-      <div class="g2">
-        <div class="form-group"><label>Channel</label><select id="m-chan"><option>Website</option><option>In Person</option><option>Book Fair</option><option>Other</option></select></div>
-        <div class="form-group"><label>Notes</label><input type="text" id="m-notes" placeholder="e.g. promo, event"></div>
-      </div>
-      <div class="hint-text" id="m-hint"> </div>
-    </div>
-    <div class="log-console" id="log-manual"></div>
+  <div class="sect">Consignment overview</div>
+  <div class="tbl-wrap">
+    <table class="tbl"><thead><tr><th>Store</th><th class="r">Sent</th><th class="r">Sold</th><th class="r">Returned</th><th class="r">Outstanding</th><th>Status</th></tr></thead><tbody id="dash-con-body"></tbody></table>
   </div>
-
-  <div class="tab-panel" id="tab-consignment">
-    <div class="row-between"><div class="section-hed">Consignment accounts</div><button class="btn gold" onclick="openM('add-store')">+ Add store</button></div>
-    <div id="stores-list"><div class="empty-state"><div class="e-icon">🏪</div>No stores yet.</div></div>
-    <div class="divider"></div>
-    <div class="sect">Consignment ledger</div>
-    <div class="tbl-wrap">
-      <table class="tbl"><thead><tr><th>Date</th><th>Store</th><th>Type</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">Due to you</th><th>Notes</th><th>Status</th></tr></thead><tbody id="ledger-body"></tbody></table>
+  <div class="sect">Inventory</div>
+  <div class="stock-block">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;">
+      <div><div class="stock-title">Un Fantastico Altrove</div><div class="stock-author">Silvia Clo Di Gregorio &nbsp;·&nbsp; List price €40.00</div></div>
+      <span class="pill gold">ISBN 978-88-XXXXXX</span>
     </div>
-  </div>
-
-  <div class="tab-panel" id="tab-history">
-    <div class="row-between">
-      <div class="section-hed">Order history</div>
-      <span class="save-indicator" id="save-ind">✓ Saved to Firebase</span>
-    </div>
-    <div class="tbl-wrap">
-      <table class="tbl"><thead><tr><th>Order #</th><th>Channel</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Total</th><th class="r">Stock after</th><th>Notes</th><th>Date</th></tr></thead><tbody id="hist-body"></tbody></table>
-    </div>
+    <div class="bar-track"><div class="bar-fill" id="d-bar" style="width:100%;background:var(--gold2);"></div></div>
+    <div class="bar-meta"><span id="d-bar-label">— / 120 on hand</span><span>Alert at 15 units</span></div>
+    <div class="stock-alert ok" id="d-alert">Loading…</div>
   </div>
 </div>
+
+<!-- WEBSITE -->
+<div class="tab-panel" id="tab-website">
+  <div class="row-between">
+    <div class="section-hed">Big Cartel orders</div>
+    <button class="btn ink" id="scan-btn" onclick="fetchOrders()">Scan Gmail</button>
+  </div>
+  <div id="orders-list"><div class="empty-state"><div class="e-icon">📬</div>Press "Scan Gmail" to pull in new orders.</div></div>
+  <button class="btn gold" id="apply-all-btn" onclick="applyAll()" disabled style="width:100%;margin-top:4px;">Apply all new orders</button>
+  <div class="log-console" id="log-web"></div>
+</div>
+
+<!-- MANUAL -->
+<div class="tab-panel" id="tab-manual">
+  <div class="section-hed" style="margin-bottom:1.25rem;">Log an order</div>
+  <div class="card">
+    <div class="g4" style="margin-bottom:12px;">
+      <div class="form-group"><label>Order #</label><input type="text" id="m-num" placeholder="optional"></div>
+      <div class="form-group"><label>Qty</label><input type="number" id="m-qty" value="1" min="1" oninput="phint()"></div>
+      <div class="form-group"><label>Price paid (€)</label><div class="price-wrap"><span class="sym">€</span><input type="number" id="m-price" value="40.00" step="0.01" oninput="phint()"></div></div>
+      <div class="form-group"><label>&nbsp;</label><button class="btn gold" style="width:100%;height:38px;" onclick="submitManual()">Add order</button></div>
+    </div>
+    <div class="g2">
+      <div class="form-group"><label>Channel</label><select id="m-chan"><option>Website</option><option>In Person</option><option>Book Fair</option><option>Other</option></select></div>
+      <div class="form-group"><label>Notes</label><input type="text" id="m-notes" placeholder="e.g. promo, event"></div>
+    </div>
+    <div class="hint-text" id="m-hint"></div>
+  </div>
+  <div class="log-console" id="log-manual"></div>
+</div>
+
+<!-- CONSIGNMENT -->
+<div class="tab-panel" id="tab-consignment">
+  <div class="row-between">
+    <div class="section-hed">Consignment accounts</div>
+    <button class="btn gold" onclick="openM('add-store')">+ Add store</button>
+  </div>
+  <div id="stores-list"><div class="empty-state"><div class="e-icon">🏪</div>No stores yet.</div></div>
+  <div class="divider"></div>
+  <div class="sect">Consignment ledger</div>
+  <div class="tbl-wrap">
+    <table class="tbl"><thead><tr><th>Date</th><th>Store</th><th>Type</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">Due to you</th><th>Notes</th><th>Status</th></tr></thead><tbody id="ledger-body"></tbody></table>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="tab-panel" id="tab-history">
+  <div class="row-between">
+    <div class="section-hed">Order history</div>
+    <span class="save-indicator" id="save-ind">✓ Saved</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="tbl"><thead><tr><th>Order #</th><th>Channel</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Total</th><th class="r">Stock after</th><th>Notes</th><th>Date</th></tr></thead><tbody id="hist-body"></tbody></table>
+  </div>
+</div>
+
+<!-- GOOGLE SHEETS -->
+<div class="tab-panel" id="tab-sheets">
+  <div class="row-between">
+    <div class="section-hed">Google Sheets sync</div>
+    <span class="sheets-badge off" id="sheets-badge2">Not connected</span>
+  </div>
+
+  <div class="sheets-setup" id="sheets-setup-card">
+    <div style="margin-bottom:1.5rem;">
+      <div style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:8px;">Connect your Google Sheet</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.7;">
+        Uses a <strong>Google Apps Script webhook</strong> — no OAuth tokens, no expiry, works forever automatically.
+        Do this once and every order syncs to your sheet instantly.
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:1.75rem;">
+
+      <div style="display:flex;gap:14px;align-items:flex-start;">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--gold3);font-family:'DM Mono',monospace;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:500;">1</div>
+        <div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;">Create a Google Sheet and open Extensions → Apps Script</div>
+          <div style="font-size:12px;color:var(--text3);">Go to <a href="https://sheets.new" target="_blank" style="color:var(--gold);">sheets.new</a> to create a fresh sheet, then click Extensions in the menu bar → Apps Script.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:14px;align-items:flex-start;">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--gold3);font-family:'DM Mono',monospace;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:500;">2</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:13px;margin-bottom:8px;">Delete everything in the editor, paste the code below, then click Deploy → New deployment → Web app</div>
+          <div style="position:relative;">
+            <pre id="gas-code" style="background:var(--ink);color:#a8d8a8;font-family:'DM Mono',monospace;font-size:11px;padding:16px;border-radius:var(--r2);overflow-x:auto;line-height:1.75;border:1px solid rgba(255,255,255,.08);white-space:pre-wrap;">function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    if (data.type === 'order') {
+      var sheet = ss.getSheetByName('Orders') || ss.insertSheet('Orders');
+      if (sheet.getLastRow() === 0) {
+        sheet.appendRow(['Date','Order #','Channel','Qty','Unit Price','Total','Stock After','Notes']);
+        sheet.getRange(1,1,1,8).setFontWeight('bold').setBackground('#0e0c0a').setFontColor('#f0c060');
+      }
+      sheet.appendRow([data.date, data.num, data.chan, data.qty, data.price, data.total, data.stockAfter, data.notes]);
+    }
+
+    if (data.type === 'consignment') {
+      var cs = ss.getSheetByName('Consignment') || ss.insertSheet('Consignment');
+      if (cs.getLastRow() === 0) {
+        cs.appendRow(['Date','Store','Event','Qty','Rate %','Amount Due','Notes','Status']);
+        cs.getRange(1,1,1,8).setFontWeight('bold').setBackground('#0e0c0a').setFontColor('#f0c060');
+      }
+      cs.appendRow([data.date, data.store, data.event, data.qty, data.rate, data.amountDue, data.notes, data.status]);
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ok:true}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ok:false, error:err.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre>
+            <button class="btn sm" style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.15);" onclick="copyGasCode()">Copy code</button>
+          </div>
+          <div style="font-size:12px;color:var(--text3);margin-top:10px;line-height:1.6;">
+            When the Deploy dialog opens: set <strong>Execute as → Me</strong> and <strong>Who has access → Anyone</strong>. Click Deploy and copy the Web App URL.
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:14px;align-items:flex-start;">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--gold3);font-family:'DM Mono',monospace;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:500;">3</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:13px;margin-bottom:10px;">Paste your Web App URL here and click Connect</div>
+          <div class="sheets-url-row">
+            <div class="form-group">
+              <label>Web App URL from Google</label>
+              <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/…/exec">
+            </div>
+            <button class="btn gold" onclick="connectSheets()" style="margin-bottom:1px;flex-shrink:0;">Connect</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Connected state -->
+  <div id="sheets-connected-card" style="display:none;">
+    <div class="sheets-setup connected" style="margin-bottom:1.5rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-weight:700;font-size:14px;color:var(--green);margin-bottom:4px;">✓ Google Sheets connected</div>
+          <div style="font-size:12px;color:var(--text3);word-break:break-all;" id="sheets-url-display"></div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn sm" onclick="testSheets()">Test connection</button>
+          <button class="btn sm danger-btn" onclick="disconnectSheets()">Disconnect</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sect">Sync log</div>
+  <div class="tbl-wrap">
+    <table class="sheets-log-tbl">
+      <thead><tr><th>Time</th><th>Type</th><th>Summary</th><th>Status</th></tr></thead>
+      <tbody id="sheets-log-body">
+        <tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px;">No sync events yet — they'll appear here as you log orders.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /.app -->
 
 <!-- MODALS -->
 <div class="overlay" id="m-add-store" style="display:none;"><div class="modal">
   <div class="modal-title">Add consignment store</div>
-  <div class="g2" style="margin-bottom:10px;">
+  <div class="g2" style="margin-bottom:12px;">
     <div class="form-group"><label>Store name *</label><input id="ns-name" placeholder="e.g. Libreria Feltrinelli"></div>
     <div class="form-group"><label>Contact person</label><input id="ns-contact" placeholder="e.g. Maria Rossi"></div>
   </div>
-  <div class="g2" style="margin-bottom:10px;">
+  <div class="g2" style="margin-bottom:12px;">
     <div class="form-group"><label>Email</label><input id="ns-email" type="email" placeholder="store@email.com"></div>
     <div class="form-group"><label>City</label><input id="ns-city" placeholder="e.g. Milan"></div>
   </div>
-  <div class="g2" style="margin-bottom:10px;">
+  <div class="g2" style="margin-bottom:12px;">
     <div class="form-group"><label>Commission rate (%)</label><input id="ns-rate" type="number" value="40" min="0" max="100"></div>
     <div class="form-group"><label>Payment terms</label><select id="ns-terms"><option>Net 30</option><option>Net 60</option><option>Net 90</option><option>On sale</option><option>Quarterly</option></select></div>
   </div>
@@ -317,22 +496,22 @@
 
 <div class="overlay" id="m-send-books" style="display:none;"><div class="modal">
   <div class="modal-title">Send books to <span id="send-sname"></span></div>
-  <div class="g2" style="margin-bottom:10px;">
+  <div class="g2" style="margin-bottom:12px;">
     <div class="form-group"><label>Qty to send</label><input id="send-qty" type="number" value="10" min="1"></div>
     <div class="form-group"><label>Date sent</label><input id="send-date" type="date"></div>
   </div>
-  <div class="form-group" style="margin-bottom:10px;"><label>Commission rate (%)</label><input id="send-rate" type="number" value="40" min="0" max="100"></div>
+  <div class="form-group" style="margin-bottom:12px;"><label>Commission rate (%)</label><input id="send-rate" type="number" value="40" min="0" max="100"></div>
   <div class="form-group"><label>Notes</label><input id="send-notes" placeholder="e.g. delivery ref, batch #"></div>
   <div class="modal-footer"><button class="btn" onclick="closeM('send-books')">Cancel</button><button class="btn gold" onclick="confirmSend()">Send books</button></div>
 </div></div>
 
 <div class="overlay" id="m-record-sale" style="display:none;"><div class="modal">
   <div class="modal-title">Record sale — <span id="sale-sname"></span></div>
-  <div class="g2" style="margin-bottom:10px;">
+  <div class="g2" style="margin-bottom:12px;">
     <div class="form-group"><label>Qty sold by store</label><input id="sale-qty" type="number" value="1" min="1"></div>
     <div class="form-group"><label>Date</label><input id="sale-date" type="date"></div>
   </div>
-  <div class="g2" style="margin-bottom:10px;">
+  <div class="g2" style="margin-bottom:12px;">
     <div class="form-group"><label>Sale price per unit (€)</label><div class="price-wrap"><span class="sym">€</span><input id="sale-price" type="number" value="40.00" step="0.01"></div></div>
     <div class="form-group"><label>Payment status</label><select id="sale-paid"><option value="pending">Pending</option><option value="paid">Paid</option></select></div>
   </div>
@@ -342,179 +521,202 @@
 
 <div class="overlay" id="m-return" style="display:none;"><div class="modal">
   <div class="modal-title">Record return — <span id="ret-sname"></span></div>
-  <div class="g2" style="margin-bottom:10px;">
+  <div class="g2" style="margin-bottom:12px;">
     <div class="form-group"><label>Qty returned</label><input id="ret-qty" type="number" value="1" min="1"></div>
     <div class="form-group"><label>Date</label><input id="ret-date" type="date"></div>
   </div>
   <div class="form-group"><label>Condition</label><select id="ret-cond"><option>Good — return to stock</option><option>Damaged — write off</option></select></div>
-  <div class="form-group" style="margin-top:10px;"><label>Notes</label><input id="ret-notes" placeholder="e.g. reason for return"></div>
+  <div class="form-group" style="margin-top:12px;"><label>Notes</label><input id="ret-notes" placeholder="e.g. reason for return"></div>
   <div class="modal-footer"><button class="btn" onclick="closeM('return')">Cancel</button><button class="btn gold" onclick="confirmReturn()">Record return</button></div>
 </div></div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const LIST=40, MAX=120, THRESH=15;
+const LIST=40,MAX=120,THRESH=15;
 const $=id=>document.getElementById(id);
 const fmt=n=>'€'+Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
 const fmtD=d=>d?new Date(d+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—';
 const today=()=>new Date().toISOString().split('T')[0];
 
-let state = { stock:120, sold:0, revenue:0, chStats:{}, hist:[], stores:[], ledger:[], doneIds:[] };
-let orders=[], activeId=null, lastSavedHash='';
-let fbReady = false;
+let state={stock:120,sold:0,revenue:0,chStats:{},hist:[],stores:[],ledger:[],doneIds:[]};
+let orders=[],activeId=null,lastSavedHash='',fbReady=false;
+let sheetsUrl=localStorage.getItem('lm-sheets-url')||'';
+let sheetsLog=[];
 
-// ── TOAST
-function showToast(msg,duration=2500){
-  const t=$('toast');t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),duration);
+// TOAST
+function showToast(msg,type='ok',dur=2800){
+  const t=$('toast');t.textContent=msg;
+  t.className='toast show'+(type==='warn'?' warn':type==='err'?' err':'');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),dur);
 }
 
-// ── SYNC UI
+// SYNC UI
 function setSyncState(status,msg){
   const dot=$('sync-dot'),label=$('sync-label'),time=$('sync-time');
   dot.className='sync-dot'+(status==='syncing'?' syncing':status==='error'?' error':'');
-  label.innerHTML=msg;
-  time.textContent=new Date().toLocaleTimeString();
+  label.innerHTML=msg;time.textContent=new Date().toLocaleTimeString();
 }
 
-// ── FIREBASE SAVE
+// SHEETS BADGE
+function updateSheetsBadge(){
+  [$('sheets-badge'),$('sheets-badge2')].forEach(b=>{
+    if(!b)return;
+    if(sheetsUrl){b.textContent='📊 Sheets: live';b.className='sheets-badge';}
+    else{b.textContent='📊 Sheets: not set up';b.className='sheets-badge off';}
+  });
+}
+
+function connectSheets(){
+  const url=$('sheets-url-input').value.trim();
+  if(!url||!url.includes('script.google.com')){showToast('Paste a valid Apps Script URL','warn');return;}
+  sheetsUrl=url;localStorage.setItem('lm-sheets-url',url);
+  showSheetsConnected();testSheets();showToast('✓ Google Sheets connected!');
+}
+function disconnectSheets(){
+  if(!confirm('Disconnect Google Sheets?'))return;
+  sheetsUrl='';localStorage.removeItem('lm-sheets-url');
+  $('sheets-setup-card').style.display='';$('sheets-connected-card').style.display='none';
+  updateSheetsBadge();showToast('Sheets disconnected','warn');
+}
+function showSheetsConnected(){
+  $('sheets-setup-card').style.display='none';$('sheets-connected-card').style.display='';
+  $('sheets-url-display').textContent=sheetsUrl;updateSheetsBadge();
+}
+async function testSheets(){
+  if(!sheetsUrl)return;
+  try{
+    await fetch(sheetsUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({type:'order',date:today(),num:'TEST-CONN',chan:'Test',qty:0,price:0,total:0,stockAfter:state.stock,notes:'Connection test — ignore this row'})});
+    addSheetsLog('Test','Connection test','ok');showToast('✓ Sheets connection verified');
+  }catch(e){addSheetsLog('Test','Failed: '+e.message,'err');showToast('Sheets test failed — check URL','err');}
+}
+async function syncToSheets(payload){
+  if(!sheetsUrl)return;
+  const summary=payload.type==='order'
+    ?`${payload.num} · ${payload.chan} · ${payload.qty}× · ${fmt(payload.total)}`
+    :`${payload.store} · ${payload.event} · ${payload.qty}×`;
+  try{
+    await fetch(sheetsUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    addSheetsLog(payload.type==='order'?'Order':'Consignment',summary,'ok');
+  }catch(e){addSheetsLog(payload.type==='order'?'Order':'Consignment','Failed: '+e.message,'err');}
+}
+function addSheetsLog(type,summary,status){
+  sheetsLog.unshift({time:new Date().toLocaleTimeString(),type,summary,status});
+  if(sheetsLog.length>50)sheetsLog.pop();
+  renderSheetsLog();
+}
+function renderSheetsLog(){
+  const b=$('sheets-log-body');
+  if(!sheetsLog.length){b.innerHTML='<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px;">No sync events yet.</td></tr>';return;}
+  b.innerHTML=sheetsLog.map(l=>`<tr><td>${l.time}</td><td>${l.type}</td><td style="color:var(--text2);">${l.summary}</td><td><span class="log-status ${l.status}"></span>${l.status==='ok'?'Sent':'Failed'}</td></tr>`).join('');
+}
+function copyGasCode(){
+  navigator.clipboard.writeText($('gas-code').textContent).then(()=>showToast('✓ Code copied!'));
+}
+
+// FIREBASE
 async function saveState(){
-  const json=JSON.stringify(state);
-  if(json===lastSavedHash) return;
-  setSyncState('syncing','<b>Firebase</b> · saving...');
+  const json=JSON.stringify(state);if(json===lastSavedHash)return;
+  setSyncState('syncing','<b>Firebase</b> · saving…');
   try{
-    if(!fbReady) throw new Error('Firebase not ready');
-    await window._fbSave(json);
-    lastSavedHash=json;
-    setSyncState('ok','<b>Firebase</b> · saved · all users share this data');
+    if(!fbReady)throw new Error('not ready');
+    await window._fbSave(json);lastSavedHash=json;
+    setSyncState('ok','<b>Firebase</b> · saved · live sync on');
     const ind=$('save-ind');ind.classList.add('show');setTimeout(()=>ind.classList.remove('show'),2000);
-  }catch(e){
-    setSyncState('error','<b>Firebase</b> · save failed — check config');
-    console.error('Firebase save failed:',e);
-  }
+  }catch(e){setSyncState('error','<b>Firebase</b> · save failed');console.error(e);}
 }
-
-// ── FIREBASE LOAD (one-time)
 async function loadState(){
-  setSyncState('syncing','<b>Firebase</b> · loading...');
+  setSyncState('syncing','<b>Firebase</b> · loading…');
   try{
-    if(!fbReady) throw new Error('Firebase not ready');
-    const json = await window._fbLoad();
+    if(!fbReady)throw new Error('not ready');
+    const json=await window._fbLoad();
     if(json){
       const loaded=JSON.parse(json);
-      state={ stock:120, sold:0, revenue:0, chStats:{}, hist:[], stores:[], ledger:[], doneIds:[], ...loaded };
-      if(!state.doneIds) state.doneIds=[];
-      lastSavedHash=json;
+      state={stock:120,sold:0,revenue:0,chStats:{},hist:[],stores:[],ledger:[],doneIds:[],...loaded};
+      if(!state.doneIds)state.doneIds=[];lastSavedHash=json;
     }
-    setSyncState('ok','<b>Firebase</b> · connected · live sync active');
+    setSyncState('ok','<b>Firebase</b> · connected · live sync on');
     $('hdr-sub').textContent='Publisher OS · Synced '+new Date().toLocaleTimeString();
-
-    // Start real-time listener — pushes updates from other users immediately
-    window._fbWatch((json)=>{
-      if(json===lastSavedHash) return;
-      const loaded=JSON.parse(json);
-      state={ stock:120, sold:0, revenue:0, chStats:{}, hist:[], stores:[], ledger:[], doneIds:[], ...loaded };
-      if(!state.doneIds) state.doneIds=[];
-      lastSavedHash=json;
-      renderAll();
-      showToast('↺ Updated from Firebase');
+    window._fbWatch(json2=>{
+      if(json2===lastSavedHash)return;
+      const loaded=JSON.parse(json2);
+      state={stock:120,sold:0,revenue:0,chStats:{},hist:[],stores:[],ledger:[],doneIds:[],...loaded};
+      if(!state.doneIds)state.doneIds=[];lastSavedHash=json2;
+      renderAll();showToast('↺ Updated from Firebase');
       $('hdr-sub').textContent='Publisher OS · Synced '+new Date().toLocaleTimeString();
     });
-  }catch(e){
-    setSyncState('error','<b>Firebase</b> · connection failed — check config');
-    console.error('Firebase load failed:',e);
-    $('fb-notice').classList.add('show');
-  }
+  }catch(e){setSyncState('error','<b>Firebase</b> · connection failed');console.error(e);}
   renderAll();
 }
+async function forceSync(){setSyncState('syncing','<b>Firebase</b> · refreshing…');await loadState();}
 
-async function forceSync(){
-  setSyncState('syncing','<b>Firebase</b> · refreshing...');
-  await loadState();
-}
-
-// ── BOOT: wait for Firebase module to signal ready
 function boot(){
-  if(window._fbReady){
-    fbReady=true;
-    loadState();
-  } else {
-    document.addEventListener('firebase-ready',()=>{
-      fbReady=true;
-      loadState();
-    });
-    // Fallback: if Firebase config is still placeholder, show notice after 3s
-    setTimeout(()=>{
-      if(!fbReady){
-        setSyncState('error','<b>Firebase</b> · not configured');
-        $('fb-notice').classList.add('show');
-        renderAll();
-      }
-    },3000);
+  if(sheetsUrl)showSheetsConnected();
+  updateSheetsBadge();
+  if(window._fbReady){fbReady=true;loadState();}
+  else{
+    document.addEventListener('firebase-ready',()=>{fbReady=true;loadState();});
+    setTimeout(()=>{if(!fbReady){setSyncState('error','<b>Firebase</b> · not connected');renderAll();}},4000);
   }
 }
 
-// ── TABS
+// TABS
 function switchTab(name){
-  const names=['dashboard','website','manual','consignment','history'];
+  const names=['dashboard','website','manual','consignment','history','sheets'];
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',names[i]===name));
   names.forEach(n=>{const p=$('tab-'+n);if(p)p.classList.toggle('active',n===name);});
-  if(name==='dashboard') updateDash();
+  if(name==='dashboard')updateDash();
   if(name==='consignment'){renderStores();renderLedger();}
+  if(name==='sheets')renderSheetsLog();
 }
-
 function openM(id){$('m-'+id).style.display='flex';const d=id==='send-books'?'send-date':id==='record-sale'?'sale-date':'ret-date';if($(d))$(d).value=today();}
 function closeM(id){$('m-'+id).style.display='none';}
 function addLog(lid,msg,type=''){const el=$(lid);el.style.display='block';const s=document.createElement('span');s.className='log-line '+type;s.textContent=new Date().toLocaleTimeString()+' · '+msg;el.appendChild(s);el.scrollTop=el.scrollHeight;}
 
-// ── DASHBOARD
+// DASHBOARD
 function updateDash(){
-  $('d-stock').textContent=state.stock; $('h-stock').textContent=state.stock;
+  $('d-stock').textContent=state.stock;$('h-stock').textContent=state.stock;
   $('d-sold').textContent=state.sold;
-  $('d-revenue').textContent=fmt(state.revenue); $('h-revenue').textContent=fmt(state.revenue);
+  $('d-revenue').textContent=fmt(state.revenue);$('h-revenue').textContent=fmt(state.revenue);
   $('d-avg-sub').textContent='avg '+(state.sold>0?fmt(state.revenue/state.sold):'—');
   const consigned=state.stores.reduce((a,s)=>a+s.outstanding,0);
-  $('d-consigned').textContent=consigned; $('h-consigned').textContent=consigned;
+  $('d-consigned').textContent=consigned;$('h-consigned').textContent=consigned;
   $('d-stores').textContent=state.stores.length;
   const owed=state.stores.reduce((a,s)=>a+s.amountOwed,0);
-  $('d-owed').textContent=fmt(owed); $('d-owed').className='kpi-value'+(owed>0?' warn':'');
+  $('d-owed').textContent=fmt(owed);$('d-owed').className='kpi-value'+(owed>0?' warn':'');
   $('d-low').textContent=state.stock<=THRESH?'⚠ Low':'OK';
   $('d-low').className='kpi-value'+(state.stock<=THRESH?' danger':'');
   const pct=Math.max(0,state.stock/MAX*100);
-  const bar=$('d-bar');
-  bar.style.width=pct+'%';
-  bar.style.background=state.stock<=THRESH?'#e76f51':state.stock<=THRESH*2?'#f4a261':'var(--gold)';
+  $('d-bar').style.width=pct+'%';
+  $('d-bar').style.background=state.stock<=THRESH?'#f87171':state.stock<=THRESH*2?'#fb923c':'var(--gold2)';
   $('d-bar-label').textContent=state.stock+' / '+MAX+' units on hand';
   const al=$('d-alert');
   if(state.stock<=THRESH){al.className='stock-alert danger';al.textContent='⚠ Below threshold ('+THRESH+') — reorder now.';}
   else if(state.stock<=THRESH*2){al.className='stock-alert warn';al.textContent='Getting low — '+state.stock+' units remaining.';}
   else{al.className='stock-alert ok';al.textContent='Stock is healthy.';}
-  const ch=$('ch-body');
   const ckeys=Object.keys(state.chStats);
-  ch.innerHTML=ckeys.length?ckeys.map(k=>{const s=state.chStats[k];return`<tr><td style="font-weight:600;">${k}</td><td class="r">${s.txns}</td><td class="r">${s.units}</td><td class="r">${fmt(s.revenue)}</td></tr>`;}).join(''):'<tr><td colspan="4"><div class="empty-state" style="padding:1rem;">No sales yet.</div></td></tr>';
-  const cb=$('dash-con-body');
-  cb.innerHTML=state.stores.length?state.stores.map(s=>{const pill=s.outstanding>0?'<span class="pill amber">Active</span>':'<span class="pill gray">Settled</span>';return`<tr><td style="font-weight:600;">${s.name}</td><td class="r">${s.sent}</td><td class="r">${s.sold}</td><td class="r">${s.returned}</td><td class="r">${s.outstanding}</td><td>${pill}</td></tr>`;}).join(''):'<tr><td colspan="6"><div class="empty-state" style="padding:1rem;">No consignment accounts.</div></td></tr>';
+  $('ch-body').innerHTML=ckeys.length?ckeys.map(k=>{const s=state.chStats[k];return`<tr><td style="font-weight:600;">${k}</td><td class="r">${s.txns}</td><td class="r">${s.units}</td><td class="r">${fmt(s.revenue)}</td></tr>`;}).join(''):'<tr><td colspan="4"><div class="empty-state" style="padding:1rem;">No sales yet.</div></td></tr>';
+  $('dash-con-body').innerHTML=state.stores.length?state.stores.map(s=>`<tr><td style="font-weight:600;">${s.name}</td><td class="r">${s.sent}</td><td class="r">${s.sold}</td><td class="r">${s.returned}</td><td class="r">${s.outstanding}</td><td>${s.outstanding>0?'<span class="pill amber">Active</span>':'<span class="pill gray">Settled</span>'}</td></tr>`).join(''):'<tr><td colspan="6"><div class="empty-state" style="padding:1rem;">No consignment accounts.</div></td></tr>';
 }
+function renderAll(){updateDash();renderStores();renderLedger();renderHist();}
 
-function renderAll(){ updateDash();renderStores();renderLedger();renderHist(); }
-
-// ── ORDER RECORDING
+// ORDER RECORDING
 function recordOrder(num,chan,qty,price,notes){
-  state.stock=Math.max(0,state.stock-qty);
-  state.sold+=qty; state.revenue+=qty*price;
-  if(!state.chStats[chan]) state.chStats[chan]={txns:0,units:0,revenue:0};
-  state.chStats[chan].txns++; state.chStats[chan].units+=qty; state.chStats[chan].revenue+=qty*price;
+  state.stock=Math.max(0,state.stock-qty);state.sold+=qty;state.revenue+=qty*price;
+  if(!state.chStats[chan])state.chStats[chan]={txns:0,units:0,revenue:0};
+  state.chStats[chan].txns++;state.chStats[chan].units+=qty;state.chStats[chan].revenue+=qty*price;
   state.hist.unshift({num,chan,qty,price,after:state.stock,notes:notes||'',date:today()});
-  renderHist(); updateDash(); saveState();
+  renderHist();updateDash();saveState();
+  syncToSheets({type:'order',date:today(),num,chan,qty,price,total:qty*price,stockAfter:state.stock,notes:notes||''});
 }
-
 function renderHist(){
-  const b=$('hist-body');
-  b.innerHTML=state.hist.length?state.hist.map(h=>`<tr><td class="mono">${h.num}</td><td>${h.chan}</td><td class="r">-${h.qty}</td><td class="r">${fmt(h.price)}</td><td class="r" style="font-weight:600;">${fmt(h.qty*h.price)}</td><td class="r">${h.after}</td><td style="font-size:12px;color:var(--text3);">${h.notes}</td><td style="font-size:12px;color:var(--text3);">${fmtD(h.date)}</td></tr>`).join(''):'<tr><td colspan="8"><div class="empty-state" style="padding:1.5rem;">No orders yet.</div></td></tr>';
+  $('hist-body').innerHTML=state.hist.length
+    ?state.hist.map(h=>`<tr><td class="mono">${h.num}</td><td>${h.chan}</td><td class="r">-${h.qty}</td><td class="r">${fmt(h.price)}</td><td class="r" style="font-weight:600;">${fmt(h.qty*h.price)}</td><td class="r">${h.after}</td><td style="font-size:12px;color:var(--text3);">${h.notes}</td><td style="font-size:12px;color:var(--text3);">${fmtD(h.date)}</td></tr>`).join('')
+    :'<tr><td colspan="8"><div class="empty-state" style="padding:1.5rem;">No orders yet.</div></td></tr>';
 }
 
-// ── WEBSITE ORDERS
+// WEBSITE
 function renderOrders(){
   const list=$('orders-list'),rel=orders.filter(o=>o.hasBook);
   if(!rel.length){list.innerHTML='<div class="empty-state"><div class="e-icon">📬</div>No Un Fantastico Altrove orders found.</div>';$('apply-all-btn').disabled=true;return;}
@@ -522,19 +724,17 @@ function renderOrders(){
   list.innerHTML=rel.map(o=>{const done=doneSet.has(o.id);return`<div class="order-card${done?' done':''}"><div class="order-row"><div><div class="order-num">${o.orderNum}</div><div class="order-meta">${o.date} · ${o.customer}</div></div><span class="pill ${done?'gray':'gold'}">${done?'Applied':'New'}</span></div><div class="order-row" style="margin-top:8px;"><span style="font-size:12px;color:var(--text3);">Un Fantastico Altrove × ${o.qty} · ${fmt(o.price||LIST)}</span>${!done?`<button class="btn sm gold" onclick="applyOne('${o.id}')">Apply</button>`:'<span style="font-size:11px;color:var(--text3);">Done</span>'}</div></div>`;}).join('');
   $('apply-all-btn').disabled=!rel.some(o=>!new Set(state.doneIds).has(o.id));
 }
-
 function applyOne(id){
   const o=orders.find(x=>x.id===id);if(!o||new Set(state.doneIds).has(id))return;
   recordOrder(o.orderNum,'Website',o.qty,o.price||LIST,'Big Cartel');
   state.doneIds.push(id);
   addLog('log-web',`${o.orderNum}: -${o.qty} → ${state.stock} remaining`,'ok');
   if(state.stock<=THRESH)addLog('log-web','⚠ Below threshold!','warn');
-  renderOrders(); saveState();
+  renderOrders();saveState();
 }
 function applyAll(){orders.filter(o=>o.hasBook&&!new Set(state.doneIds).has(o.id)).forEach(o=>applyOne(o.id));}
-
 async function fetchOrders(){
-  const btn=$('scan-btn');btn.innerHTML='<span class="spinner"></span>Scanning...';btn.disabled=true;
+  const btn=$('scan-btn');btn.innerHTML='<span class="spinner"></span>Scanning…';btn.disabled=true;
   try{
     const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:`Search Gmail for Big Cartel orders for Lyricalmyrical Books with "Un Fantastico Altrove". Respond ONLY valid JSON: {"orders":[{"id":"msg_id","orderNum":"#ORDER","date":"Mon DD, YYYY","customer":"Name","qty":1,"price":40.00,"hasBook":true}]}`,messages:[{role:"user",content:"Search Gmail for recent Big Cartel orders for Un Fantastico Altrove from Lyricalmyrical Books."}],mcp_servers:[{type:"url",url:"https://gmail.mcp.claude.com/mcp",name:"gmail"}]})});
     const d=await r.json();
@@ -551,7 +751,7 @@ async function fetchOrders(){
   btn.textContent='Scan Gmail';btn.disabled=false;
 }
 
-// ── MANUAL
+// MANUAL
 function phint(){const p=parseFloat($('m-price').value)||0,q=parseInt($('m-qty').value)||1,h=$('m-hint'),t=p*q;if(p<LIST){h.className='hint-text amber';h.textContent=`Discounted from €${LIST.toFixed(2)} — total ${fmt(t)}`;}else{h.className='hint-text';h.textContent=q>1?`Total ${fmt(t)}`:'';};}
 function submitManual(){
   const qty=parseInt($('m-qty').value)||1,price=parseFloat($('m-price').value)||LIST;
@@ -561,21 +761,16 @@ function submitManual(){
   addLog('log-manual',`${num}: -${qty} @ ${fmt(price)} → ${state.stock} remaining`,'ok');
   if(state.stock<=THRESH)addLog('log-manual','⚠ Below threshold!','warn');
   $('m-num').value='';$('m-qty').value='1';$('m-price').value=LIST.toFixed(2);$('m-notes').value='';$('m-hint').textContent='';
-  showToast('✓ Order saved to Firebase');
+  showToast('✓ Order saved · syncing to Sheets…');
 }
 
-// ── CONSIGNMENT
+// CONSIGNMENT
 function storeById(id){return state.stores.find(s=>s.id===id);}
-
 function addStore(){
   const name=$('ns-name').value.trim();if(!name)return;
   state.stores.push({id:Date.now(),name,contact:$('ns-contact').value.trim(),email:$('ns-email').value.trim(),city:$('ns-city').value.trim(),rate:parseFloat($('ns-rate').value)||40,terms:$('ns-terms').value,notes:$('ns-notes').value.trim(),sent:0,sold:0,returned:0,outstanding:0,amountOwed:0});
-  closeM('add-store');
-  ['ns-name','ns-contact','ns-email','ns-city','ns-notes'].forEach(id=>$(id).value='');
-  $('ns-rate').value='40'; renderStores(); updateDash(); saveState();
-  showToast('✓ Store added and saved to Firebase');
+  closeM('add-store');['ns-name','ns-contact','ns-email','ns-city','ns-notes'].forEach(id=>$(id).value='');$('ns-rate').value='40';renderStores();updateDash();saveState();showToast('✓ Store added');
 }
-
 function renderStores(){
   const el=$('stores-list');
   if(!state.stores.length){el.innerHTML='<div class="empty-state"><div class="e-icon">🏪</div>No stores yet. Add your first consignment account.</div>';return;}
@@ -584,9 +779,7 @@ function renderStores(){
     return`<div class="store-card"><div class="store-head"><div><div class="store-name">${s.name}</div><div class="store-meta">${[s.city,s.contact,s.email].filter(Boolean).join(' · ')} · ${s.rate}% commission · ${s.terms}</div></div>${sp}</div><div class="store-kpis"><div class="sk"><div class="sk-l">Sent</div><div class="sk-v">${s.sent}</div></div><div class="sk"><div class="sk-l">Sold</div><div class="sk-v">${s.sold}</div></div><div class="sk"><div class="sk-l">Outstanding</div><div class="sk-v ${s.outstanding>0?'warn':''}">${s.outstanding}</div></div><div class="sk"><div class="sk-l">Owed</div><div class="sk-v ${s.amountOwed>0?'warn':''}">${s.amountOwed>0?fmt(s.amountOwed):'—'}</div></div></div><div class="store-actions"><button class="btn sm gold" onclick="openSend(${s.id})">Send books</button><button class="btn sm ink" onclick="openSale(${s.id})" ${!s.outstanding?'disabled':''}>Record sale</button><button class="btn sm" onclick="openRet(${s.id})" ${!s.outstanding?'disabled':''}>Return</button><button class="btn sm danger-btn" onclick="removeStore(${s.id})">Remove</button></div></div>`;
   }).join('');
 }
-
 function removeStore(id){if(!confirm('Remove store?'))return;state.stores=state.stores.filter(s=>s.id!==id);renderStores();updateDash();saveState();}
-
 function openSend(id){activeId=id;const s=storeById(id);$('send-sname').textContent=s.name;$('send-rate').value=s.rate;openM('send-books');}
 function confirmSend(){
   const s=storeById(activeId),qty=parseInt($('send-qty').value)||0,date=$('send-date').value,rate=parseFloat($('send-rate').value)||s.rate,notes=$('send-notes').value.trim();
@@ -594,9 +787,9 @@ function confirmSend(){
   state.stock-=qty;s.sent+=qty;s.outstanding+=qty;
   state.ledger.push({id:Date.now(),storeId:s.id,storeName:s.name,type:'Shipment',date,qty,rate,amountDue:0,paid:'n/a',notes,status:'sent'});
   closeM('send-books');renderStores();renderLedger();updateDash();saveState();
+  syncToSheets({type:'consignment',date,store:s.name,event:'Shipment',qty,rate,amountDue:0,notes,status:'sent'});
   showToast(`✓ ${qty} books sent to ${s.name}`);
 }
-
 function openSale(id){activeId=id;$('sale-sname').textContent=storeById(id).name;openM('record-sale');}
 function confirmSale(){
   const s=storeById(activeId),qty=parseInt($('sale-qty').value)||0,date=$('sale-date').value,price=parseFloat($('sale-price').value)||LIST,paid=$('sale-paid').value,notes=$('sale-notes').value.trim();
@@ -606,12 +799,13 @@ function confirmSale(){
   state.sold+=qty;state.revenue+=pub;
   if(!state.chStats['Consignment'])state.chStats['Consignment']={txns:0,units:0,revenue:0};
   state.chStats['Consignment'].txns++;state.chStats['Consignment'].units+=qty;state.chStats['Consignment'].revenue+=pub;
-  state.hist.unshift({num:'CON-'+s.name.replace(/\s+/g,'').slice(0,5).toUpperCase()+'-'+Date.now().toString().slice(-4),chan:'Consignment',qty,price:pub/qty,after:state.stock,notes:s.name,date});
+  const num='CON-'+s.name.replace(/\s+/g,'').slice(0,5).toUpperCase()+'-'+Date.now().toString().slice(-4);
+  state.hist.unshift({num,chan:'Consignment',qty,price:pub/qty,after:state.stock,notes:s.name,date});
   state.ledger.push({id:Date.now(),storeId:s.id,storeName:s.name,type:'Sale',date,qty,rate:s.rate,amountDue:pub,paid,notes,status:paid});
   closeM('record-sale');renderStores();renderLedger();renderHist();updateDash();saveState();
+  syncToSheets({type:'consignment',date,store:s.name,event:'Sale',qty,rate:s.rate,amountDue:pub,notes,status:paid});
   showToast(`✓ Sale recorded — ${fmt(pub)} due to you`);
 }
-
 function openRet(id){activeId=id;$('ret-sname').textContent=storeById(id).name;openM('return');}
 function confirmReturn(){
   const s=storeById(activeId),qty=parseInt($('ret-qty').value)||0,date=$('ret-date').value,cond=$('ret-cond').value,notes=$('ret-notes').value.trim();
@@ -619,16 +813,15 @@ function confirmReturn(){
   s.returned+=qty;s.outstanding-=qty;const good=cond.startsWith('Good');if(good)state.stock+=qty;
   state.ledger.push({id:Date.now(),storeId:s.id,storeName:s.name,type:'Return',date,qty,rate:s.rate,amountDue:0,paid:'n/a',notes:(notes?notes+' · ':'')+cond,status:good?'restocked':'written off'});
   closeM('return');renderStores();renderLedger();updateDash();saveState();
+  syncToSheets({type:'consignment',date,store:s.name,event:'Return',qty,rate:s.rate,amountDue:0,notes:cond,status:good?'restocked':'written off'});
   showToast(good?`✓ ${qty} books returned to stock`:`✓ ${qty} books written off`);
 }
-
 function markPaid(lid){
   const e=state.ledger.find(x=>x.id===lid);if(!e)return;
   const s=storeById(e.storeId);if(s)s.amountOwed=Math.max(0,s.amountOwed-e.amountDue);
   e.paid='paid';e.status='paid';renderLedger();renderStores();updateDash();saveState();
   showToast(`✓ Payment of ${fmt(e.amountDue)} marked as received`);
 }
-
 function renderLedger(){
   const b=$('ledger-body');
   if(!state.ledger.length){b.innerHTML='<tr><td colspan="8"><div class="empty-state" style="padding:1rem;">No entries.</div></td></tr>';return;}
@@ -643,7 +836,6 @@ function renderLedger(){
   b.innerHTML=[...state.ledger].reverse().map(e=>`<tr><td style="font-size:12px;color:var(--text3);">${fmtD(e.date)}</td><td style="font-weight:600;">${e.storeName}</td><td>${e.type}</td><td class="r">${e.qty}</td><td class="r">${e.type==='Sale'?e.rate+'%':'—'}</td><td class="r" style="font-weight:600;">${e.amountDue>0?fmt(e.amountDue):'—'}</td><td style="font-size:12px;color:var(--text3);">${e.notes||'—'}</td><td>${pill(e)}${e.status==='pending'?` <button class="btn sm" style="margin-left:6px;" onclick="markPaid(${e.id})">Mark paid</button>`:''}</td></tr>`).join('');
 }
 
-// ── START
 boot();
 </script>
 </body>
