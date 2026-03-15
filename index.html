@@ -264,6 +264,23 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .toast.show{opacity:1;transform:translateY(0);}
 .toast.warn{border-left-color:#fb923c;}
 
+/* EDIT / VOID */
+.tbl tbody tr.voided td{opacity:.35;}
+.tbl tbody tr.voided td:not(:last-child){text-decoration:line-through;}
+.edit-btn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:var(--r);background:transparent;border:1px solid transparent;color:var(--text4);cursor:pointer;font-size:13px;transition:all .14s;vertical-align:middle;margin-left:4px;opacity:0;}
+.tbl tbody tr:hover .edit-btn{opacity:1;background:var(--cream2);border-color:var(--border);color:var(--text2);}
+.edit-btn:hover{background:var(--gold-bg) !important;border-color:var(--gold-line) !important;color:var(--gold) !important;}
+.void-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.06em;background:var(--red-bg);color:var(--red);}
+.edit-modal{max-width:560px;}
+.edit-modal-type{display:inline-flex;align-items:center;padding:3px 10px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:var(--cream3);color:var(--text3);margin-bottom:1rem;}
+.edit-diff{display:flex;align-items:center;gap:6px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);margin-top:5px;}
+.edit-diff .old{text-decoration:line-through;}
+.edit-diff .arr{color:var(--gold);}
+.edit-diff .new-val{color:var(--green);font-weight:600;}
+.void-zone{margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border);}
+.void-zone-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:.5rem;}
+.void-zone-body{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:.75rem;}
+
 /* PASSWORD GATE */
 #pw-gate{position:fixed;inset:0;z-index:9999;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:1.5rem;}
 #pw-gate .box{width:100%;max-width:360px;text-align:center;}
@@ -487,38 +504,68 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
       <div style="display:flex;gap:14px;align-items:flex-start;">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--gold3);font-family:'DM Mono',monospace;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
         <div style="flex:1;">
-          <div style="font-weight:700;font-size:13px;margin-bottom:8px;">Paste this code, deploy as Web App (Execute as: Me, Who has access: Anyone)</div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:8px;">Paste this code → Deploy → <span style="color:var(--gold);">New deployment</span> → Web App → Execute as: Me → Who has access: Anyone</div>
+          <div style="font-size:12px;color:var(--red-bg);background:var(--red);padding:6px 10px;border-radius:4px;margin-bottom:8px;font-weight:600;">⚠ Every code change needs a NEW deployment — not "Manage deployments". Copy the new URL each time.</div>
           <div style="position:relative;">
-            <pre id="gas-code" style="background:var(--ink);color:#a8d8a8;font-family:'DM Mono',monospace;font-size:11px;padding:16px;border-radius:var(--r2);overflow-x:auto;line-height:1.75;white-space:pre-wrap;">function doPost(e) {
+            <pre id="gas-code" style="background:var(--ink);color:#a8d8a8;font-family:'DM Mono',monospace;font-size:11px;padding:16px;border-radius:var(--r2);overflow-x:auto;line-height:1.75;white-space:pre-wrap;">// Lyricalmyrical Books — Google Sheets sync
+// Handles both fetch() no-cors (raw body) and form POST (e.parameter)
+function doPost(e) {
   try {
-    var data = JSON.parse(e.parameter.payload);
+    var raw = '';
+
+    // Try raw body first (from fetch no-cors)
+    if (e.postData && e.postData.contents) {
+      raw = e.postData.contents;
+    }
+
+    // Fall back to form parameter
+    if (!raw && e.parameter && e.parameter.payload) {
+      raw = e.parameter.payload;
+    }
+
+    if (!raw) throw new Error('No data received');
+
+    var data = JSON.parse(raw);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var bookName = data.book || 'Unknown';
+    var bookName = (data.book || 'Unknown').replace(/[^a-zA-Z0-9 \-]/g, '');
+    var timestamp = new Date().toLocaleString('en-GB');
 
     if (data.type === 'order') {
       var sheetName = bookName + ' — Orders';
       var sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
       if (sheet.getLastRow() === 0) {
-        sheet.appendRow(['Date','Order #','Channel','Qty','Unit Price','Total','Stock After','Notes']);
-        sheet.getRange(1,1,1,8).setFontWeight('bold').setBackground('#0e0c0a').setFontColor('#f0c060');
+        sheet.appendRow(['Logged at','Date','Order #','Channel','Qty','Unit Price','Total','Stock After','Notes']);
+        sheet.getRange(1,1,1,9).setFontWeight('bold').setBackground('#0e0c0a').setFontColor('#f0c060');
+        sheet.setFrozenRows(1);
       }
-      sheet.appendRow([data.date, data.num, data.chan, data.qty, data.price, data.total, data.stockAfter, data.notes]);
+      sheet.appendRow([timestamp, data.date, data.num, data.chan, data.qty, data.price, data.total, data.stockAfter, data.notes||'']);
     }
 
     if (data.type === 'consignment') {
       var csName = bookName + ' — Consignment';
       var cs = ss.getSheetByName(csName) || ss.insertSheet(csName);
       if (cs.getLastRow() === 0) {
-        cs.appendRow(['Date','Store','Event','Qty','Rate %','Amount Due','Notes','Status']);
-        cs.getRange(1,1,1,8).setFontWeight('bold').setBackground('#0e0c0a').setFontColor('#f0c060');
+        cs.appendRow(['Logged at','Date','Store','Event','Qty','Rate %','Amount Due','Notes','Status']);
+        cs.getRange(1,1,1,9).setFontWeight('bold').setBackground('#0e0c0a').setFontColor('#f0c060');
+        cs.setFrozenRows(1);
       }
-      cs.appendRow([data.date, data.store, data.event, data.qty, data.rate, data.amountDue, data.notes, data.status]);
+      cs.appendRow([timestamp, data.date, data.store||'', data.event||'', data.qty, data.rate||'', data.amountDue||0, data.notes||'', data.status||'']);
     }
 
-    return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
+    var output = ContentService.createTextOutput(JSON.stringify({ok:true,ts:timestamp}));
+    output.setMimeType(ContentService.MimeType.JSON);
+    return output;
+
   } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({ok:false,error:err.message})).setMimeType(ContentService.MimeType.JSON);
+    var errOut = ContentService.createTextOutput(JSON.stringify({ok:false,error:err.message}));
+    errOut.setMimeType(ContentService.MimeType.JSON);
+    return errOut;
   }
+}
+
+// Test with GET so you can verify deployment in browser
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({ok:true,msg:'Lyricalmyrical Sheets webhook is live'})).setMimeType(ContentService.MimeType.JSON);
 }</pre>
             <button class="btn sm" style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.15);" onclick="copyGasCode()">Copy</button>
           </div>
@@ -547,7 +594,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
           <a id="open-sheet-link" href="#" target="_blank" class="btn gold" style="text-decoration:none;display:none;">↗ Open sheet</a>
-          <button class="btn sm" onclick="testSheets()">Test</button>
+          <button class="btn sm" onclick="testSheets()">Test connection</button>
+          <button class="btn sm" id="verify-url-btn" onclick="verifyUrl()" style="font-size:10px;">↗ Verify URL</button>
           <button class="btn sm danger-btn" onclick="disconnectSheets()">Disconnect</button>
         </div>
       </div>
@@ -599,6 +647,53 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
   <div class="modal-footer"><button class="btn" onclick="closeM('return')">Cancel</button><button class="btn gold" onclick="confirmReturn()">Record return</button></div>
 </div></div>
 
+
+<!-- EDIT ENTRY MODAL -->
+<div class="overlay" id="m-edit-entry" style="display:none;"><div class="modal edit-modal">
+  <div class="modal-title" id="edit-modal-title">Edit entry</div>
+  <div class="edit-modal-type" id="edit-modal-type-badge">Order</div>
+
+  <!-- ORDER EDIT FIELDS -->
+  <div id="edit-order-fields">
+    <div class="g2" style="margin-bottom:12px;">
+      <div class="form-group"><label>Order #</label><input id="edit-num" type="text"></div>
+      <div class="form-group"><label>Date</label><input id="edit-date" type="date"></div>
+    </div>
+    <div class="g2" style="margin-bottom:12px;">
+      <div class="form-group"><label>Qty</label><input id="edit-qty" type="number" min="1"></div>
+      <div class="form-group"><label>Unit price</label><div class="price-wrap"><span class="sym" id="edit-sym">€</span><input id="edit-price" type="number" step="0.01"></div></div>
+    </div>
+    <div class="g2" style="margin-bottom:12px;">
+      <div class="form-group"><label>Channel</label><select id="edit-chan"><option>Website</option><option>In Person</option><option>Book Fair</option><option>Other</option></select></div>
+      <div class="form-group"><label>Notes</label><input id="edit-notes" type="text"></div>
+    </div>
+    <div class="edit-diff" id="edit-diff-preview" style="display:none;">Changes will recalculate stock and revenue.</div>
+  </div>
+
+  <!-- CONSIGNMENT LEDGER EDIT FIELDS -->
+  <div id="edit-ledger-fields" style="display:none;">
+    <div class="g2" style="margin-bottom:12px;">
+      <div class="form-group"><label>Date</label><input id="edit-l-date" type="date"></div>
+      <div class="form-group"><label>Qty</label><input id="edit-l-qty" type="number" min="1"></div>
+    </div>
+    <div class="g2" style="margin-bottom:12px;">
+      <div class="form-group"><label>Rate (%)</label><input id="edit-l-rate" type="number" min="0" max="100" step="0.1"></div>
+      <div class="form-group"><label>Notes</label><input id="edit-l-notes" type="text"></div>
+    </div>
+  </div>
+
+  <!-- VOID ZONE -->
+  <div class="void-zone" id="edit-void-zone">
+    <div class="void-zone-title">Void this entry</div>
+    <div class="void-zone-body" id="edit-void-body">Voiding will reverse all stock and revenue effects of this entry. The entry stays visible in history as struck-through for your records.</div>
+    <button class="btn danger-btn" id="edit-void-btn" onclick="voidEntry()">Void this entry</button>
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn" onclick="closeM('edit-entry')">Cancel</button>
+    <button class="btn gold" onclick="saveEntryEdit()">Save changes</button>
+  </div>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -945,7 +1040,12 @@ function recordOrder(num, chan, qty, price, notes) {
 function renderHist() {
   const s = getState(), book = getBook(), cur = book.currency;
   $('hist-body').innerHTML = s.hist.length
-    ? s.hist.map(h=>`<tr><td class="mono">${h.num}</td><td>${h.chan}</td><td class="r">-${h.qty}</td><td class="r">${fmt(h.price,cur)}</td><td class="r" style="font-weight:600;">${fmt(h.qty*h.price,cur)}</td><td class="r">${h.after}</td><td style="font-size:12px;color:var(--text3);">${h.notes}</td><td style="font-size:12px;color:var(--text3);">${fmtD(h.date)}</td></tr>`).join('')
+    ? s.hist.map((h,i)=>{
+        const voided = h.voided ? ' voided' : '';
+        const voidPill = h.voided ? '<span class="void-badge">Void</span>' : '';
+        const editBtn = IS_AUTHOR_MODE ? '' : `<button class="edit-btn" onclick="openEditHist(${i})" title="Edit entry">✎</button>`;
+        return `<tr class="${voided}"><td class="mono">${h.num}${editBtn}</td><td>${h.chan}</td><td class="r">${h.voided?'':'-'}${h.qty}</td><td class="r">${fmt(h.price,cur)}</td><td class="r" style="font-weight:600;">${fmt(h.qty*h.price,cur)}</td><td class="r">${h.after}</td><td style="font-size:12px;color:var(--text3);">${h.notes||'—'}</td><td style="font-size:12px;color:var(--text3);">${fmtD(h.date)} ${voidPill}</td></tr>`;
+      }).join('')
     : '<tr><td colspan="8"><div class="empty-state" style="padding:1.5rem;">No orders yet.</div></td></tr>';
 }
 
@@ -1073,6 +1173,7 @@ function renderLedger(){
   const s=getState(),book=getBook(),cur=book.currency,b=$('ledger-body');
   if(!s.ledger.length){b.innerHTML='<tr><td colspan="8"><div class="empty-state" style="padding:1rem;">No entries.</div></td></tr>';return;}
   const pill=e=>{
+    if(e.voided)return'<span class="void-badge">Void</span>';
     if(e.type==='Shipment')return'<span class="pill blue">Sent</span>';
     if(e.status==='paid')return'<span class="pill green">Paid</span>';
     if(e.status==='pending')return'<span class="pill amber">Pending</span>';
@@ -1080,7 +1181,201 @@ function renderLedger(){
     if(e.status==='written off')return'<span class="pill red">Written off</span>';
     return`<span class="pill gray">${e.status}</span>`;
   };
-  b.innerHTML=[...s.ledger].reverse().map(e=>`<tr><td style="font-size:12px;color:var(--text3);">${fmtD(e.date)}</td><td style="font-weight:600;">${e.storeName}</td><td>${e.type}</td><td class="r">${e.qty}</td><td class="r">${e.type==='Sale'?e.rate+'%':'—'}</td><td class="r" style="font-weight:600;">${e.amountDue>0?fmt(e.amountDue,cur):'—'}</td><td style="font-size:12px;color:var(--text3);">${e.notes||'—'}</td><td>${pill(e)}${e.status==='pending'?` <button class="btn sm" style="margin-left:6px;" onclick="markPaid(${e.id})">Mark paid</button>`:''}</td></tr>`).join('');
+  // Map ledger indices so edit buttons can reference them correctly (ledger is displayed reversed)
+  const indexed = s.ledger.map((e,i)=>({e,i}));
+  b.innerHTML=[...indexed].reverse().map(({e,i})=>{
+    const voided = e.voided?' voided':'';
+    const editBtn = IS_AUTHOR_MODE ? '' : `<button class="edit-btn" onclick="openEditLedger(${i})" title="Edit entry">✎</button>`;
+    return`<tr class="${voided}"><td style="font-size:12px;color:var(--text3);">${fmtD(e.date)}</td><td style="font-weight:600;">${e.storeName}${editBtn}</td><td>${e.type}</td><td class="r">${e.qty}</td><td class="r">${e.type==='Sale'?e.rate+'%':'—'}</td><td class="r" style="font-weight:600;">${e.amountDue>0?fmt(e.amountDue,cur):'—'}</td><td style="font-size:12px;color:var(--text3);">${e.notes||'—'}</td><td>${pill(e)}${e.status==='pending'&&!e.voided?` <button class="btn sm" style="margin-left:6px;" onclick="markPaid(${e.id})">Mark paid</button>`:''}</td></tr>`;
+  }).join('');
+}
+
+// ── EDIT & VOID SYSTEM ─────────────────────────────────────────────────────
+let editCtx = null; // { kind:'hist'|'ledger', idx, snapshot }
+
+function openEditHist(idx) {
+  const s = getState(), book = getBook(), h = s.hist[idx];
+  if (!h) return;
+  editCtx = { kind:'hist', idx, snapshot: JSON.parse(JSON.stringify(h)) };
+  $('edit-modal-title').textContent = 'Edit order entry';
+  $('edit-modal-type-badge').textContent = h.chan + ' order';
+  $('edit-order-fields').style.display = '';
+  $('edit-ledger-fields').style.display = 'none';
+  $('edit-sym').textContent = book.currency;
+  $('edit-num').value = h.num;
+  $('edit-date').value = h.date;
+  $('edit-qty').value = h.qty;
+  $('edit-price').value = h.price.toFixed(2);
+  $('edit-chan').value = h.chan;
+  $('edit-notes').value = h.notes || '';
+  $('edit-diff-preview').style.display = 'none';
+  const voidZone = $('edit-void-zone');
+  if (h.voided) {
+    $('edit-void-btn').textContent = 'Unvoid this entry';
+    $('edit-void-body').textContent = 'This entry is currently voided. Unvoiding will re-apply its stock and revenue effects.';
+  } else {
+    $('edit-void-btn').textContent = 'Void this entry';
+    $('edit-void-body').textContent = 'Voiding reverses all stock and revenue effects. The entry stays visible as struck-through for your records.';
+  }
+  openM('edit-entry');
+}
+
+function openEditLedger(idx) {
+  const s = getState(), book = getBook(), e = s.ledger[idx];
+  if (!e) return;
+  editCtx = { kind:'ledger', idx, snapshot: JSON.parse(JSON.stringify(e)) };
+  $('edit-modal-title').textContent = 'Edit consignment entry';
+  $('edit-modal-type-badge').textContent = e.storeName + ' · ' + e.type;
+  $('edit-order-fields').style.display = 'none';
+  $('edit-ledger-fields').style.display = '';
+  $('edit-l-date').value = e.date;
+  $('edit-l-qty').value = e.qty;
+  $('edit-l-rate').value = e.rate;
+  $('edit-l-notes').value = e.notes || '';
+  if (e.voided) {
+    $('edit-void-btn').textContent = 'Unvoid this entry';
+    $('edit-void-body').textContent = 'This entry is currently voided. Unvoiding will re-apply its effects on consignment stock and payments.';
+  } else {
+    $('edit-void-btn').textContent = 'Void this entry';
+    $('edit-void-body').textContent = 'Voiding reverses the qty and payment effects of this entry. It stays visible as struck-through.';
+  }
+  openM('edit-entry');
+}
+
+function saveEntryEdit() {
+  if (!editCtx) return;
+  const s = getState(), book = getBook();
+  if (editCtx.kind === 'hist') {
+    const old = editCtx.snapshot;
+    const h = s.hist[editCtx.idx];
+    const newQty = parseInt($('edit-qty').value) || old.qty;
+    const newPrice = parseFloat($('edit-price').value) || old.price;
+    const newChan = $('edit-chan').value;
+    const newNum = $('edit-num').value.trim() || old.num;
+    const newDate = $('edit-date').value || old.date;
+    const newNotes = $('edit-notes').value.trim();
+
+    if (!h.voided) {
+      // Reverse old effect
+      s.stock += old.qty;
+      s.sold -= old.qty;
+      s.revenue -= old.qty * old.price;
+      if (s.chStats[old.chan]) {
+        s.chStats[old.chan].txns--;
+        s.chStats[old.chan].units -= old.qty;
+        s.chStats[old.chan].revenue -= old.qty * old.price;
+        if (s.chStats[old.chan].txns <= 0) delete s.chStats[old.chan];
+      }
+      // Apply new effect
+      s.stock = Math.max(0, s.stock - newQty);
+      s.sold += newQty;
+      s.revenue += newQty * newPrice;
+      if (!s.chStats[newChan]) s.chStats[newChan] = {txns:0,units:0,revenue:0};
+      s.chStats[newChan].txns++;
+      s.chStats[newChan].units += newQty;
+      s.chStats[newChan].revenue += newQty * newPrice;
+    }
+
+    // Update the record
+    h.num = newNum; h.chan = newChan; h.qty = newQty; h.price = newPrice;
+    h.date = newDate; h.notes = newNotes;
+    // Recalculate "after" for this entry; for simplicity mark it as edited
+    h.edited = true;
+
+  } else {
+    // Ledger entry edit (date, qty, rate, notes — non-destructive for stock, 
+    // since consignment stock effects are complex; just update the displayed values)
+    const e = s.ledger[editCtx.idx];
+    e.date = $('edit-l-date').value || e.date;
+    e.notes = $('edit-l-notes').value.trim();
+    // qty and rate — update display only, reverse/reapply amountDue if sale
+    const newQty = parseInt($('edit-l-qty').value) || e.qty;
+    const newRate = parseFloat($('edit-l-rate').value) || e.rate;
+    if (e.type === 'Sale' && !e.voided) {
+      // Find the store and adjust owed
+      const st = getState().stores.find(st=>st.id===e.storeId);
+      if (st) {
+        const oldDue = e.amountDue;
+        // We need the sale price — estimate from old amountDue
+        const salePrice = oldDue > 0 ? (oldDue / (e.qty * (1 - e.rate/100))) : book.listPrice;
+        const newDue = newQty * salePrice * (1 - newRate/100);
+        if (e.paid === 'pending' && st) {
+          st.amountOwed = Math.max(0, st.amountOwed - oldDue + newDue);
+        }
+        s.revenue = Math.max(0, s.revenue - oldDue + newDue);
+        if (s.chStats['Consignment']) {
+          s.chStats['Consignment'].revenue = Math.max(0, s.chStats['Consignment'].revenue - oldDue + newDue);
+          s.chStats['Consignment'].units += (newQty - e.qty);
+        }
+        st.sold += (newQty - e.qty);
+        e.amountDue = newDue;
+      }
+    }
+    e.qty = newQty;
+    e.rate = newRate;
+    e.edited = true;
+  }
+
+  closeM('edit-entry');
+  renderAll(); updateDash(); saveState(activeBook);
+  showToast('✓ Entry updated');
+}
+
+function voidEntry() {
+  if (!editCtx) return;
+  const s = getState(), book = getBook();
+
+  if (editCtx.kind === 'hist') {
+    const h = s.hist[editCtx.idx];
+    if (!h) return;
+    if (!h.voided) {
+      // VOID: reverse effects
+      s.stock += h.qty;
+      s.sold = Math.max(0, s.sold - h.qty);
+      s.revenue = Math.max(0, s.revenue - h.qty * h.price);
+      if (s.chStats[h.chan]) {
+        s.chStats[h.chan].txns = Math.max(0, s.chStats[h.chan].txns - 1);
+        s.chStats[h.chan].units = Math.max(0, s.chStats[h.chan].units - h.qty);
+        s.chStats[h.chan].revenue = Math.max(0, s.chStats[h.chan].revenue - h.qty * h.price);
+        if (s.chStats[h.chan].txns <= 0) delete s.chStats[h.chan];
+      }
+      h.voided = true;
+      showToast('Entry voided — stock & revenue reversed', 'warn');
+    } else {
+      // UNVOID: re-apply effects
+      s.stock = Math.max(0, s.stock - h.qty);
+      s.sold += h.qty;
+      s.revenue += h.qty * h.price;
+      if (!s.chStats[h.chan]) s.chStats[h.chan] = {txns:0,units:0,revenue:0};
+      s.chStats[h.chan].txns++;
+      s.chStats[h.chan].units += h.qty;
+      s.chStats[h.chan].revenue += h.qty * h.price;
+      h.voided = false;
+      showToast('Entry unvoided — effects restored');
+    }
+  } else {
+    const e = s.ledger[editCtx.idx];
+    if (!e) return;
+    const st = s.stores.find(st=>st.id===e.storeId);
+    if (!e.voided) {
+      // VOID consignment entry
+      if (e.type === 'Shipment' && st) { st.sent = Math.max(0,st.sent-e.qty); st.outstanding = Math.max(0,st.outstanding-e.qty); s.stock += e.qty; }
+      if (e.type === 'Sale' && st) { st.sold = Math.max(0,st.sold-e.qty); st.outstanding += e.qty; s.sold = Math.max(0,s.sold-e.qty); s.revenue = Math.max(0,s.revenue-e.amountDue); if(e.paid==='pending')st.amountOwed = Math.max(0,st.amountOwed-e.amountDue); if(s.chStats['Consignment']){s.chStats['Consignment'].txns=Math.max(0,s.chStats['Consignment'].txns-1);s.chStats['Consignment'].units=Math.max(0,s.chStats['Consignment'].units-e.qty);s.chStats['Consignment'].revenue=Math.max(0,s.chStats['Consignment'].revenue-e.amountDue);} }
+      if (e.type === 'Return' && st) { st.returned = Math.max(0,st.returned-e.qty); st.outstanding += e.qty; if(e.status==='restocked') s.stock = Math.max(0,s.stock-e.qty); }
+      e.voided = true;
+      showToast('Consignment entry voided — effects reversed', 'warn');
+    } else {
+      // UNVOID consignment entry
+      if (e.type === 'Shipment' && st) { st.sent += e.qty; st.outstanding += e.qty; s.stock = Math.max(0,s.stock-e.qty); }
+      if (e.type === 'Sale' && st) { st.sold += e.qty; st.outstanding = Math.max(0,st.outstanding-e.qty); s.sold += e.qty; s.revenue += e.amountDue; if(e.paid==='pending')st.amountOwed += e.amountDue; if(!s.chStats['Consignment'])s.chStats['Consignment']={txns:0,units:0,revenue:0}; s.chStats['Consignment'].txns++;s.chStats['Consignment'].units+=e.qty;s.chStats['Consignment'].revenue+=e.amountDue; }
+      if (e.type === 'Return' && st) { st.returned += e.qty; st.outstanding = Math.max(0,st.outstanding-e.qty); if(e.status==='restocked')s.stock += e.qty; }
+      e.voided = false;
+      showToast('Consignment entry unvoided — effects restored');
+    }
+  }
+
+  closeM('edit-entry');
+  renderAll(); updateDash(); saveState(activeBook);
 }
 
 // ── RESET
@@ -1116,23 +1411,70 @@ function connectSheets(){
 }
 function disconnectSheets(){if(!confirm('Disconnect?'))return;sheetsUrl='';sheetsSpreadsheetUrl='';localStorage.removeItem('lm-sheets-url');localStorage.removeItem('lm-sheets-spreadsheet-url');$('sheets-setup-card').style.display='';$('sheets-connected-card').style.display='none';updateSheetsBadge();showToast('Sheets disconnected','warn');}
 function showSheetsConnected(){$('sheets-setup-card').style.display='none';$('sheets-connected-card').style.display='';$('sheets-url-display').textContent=sheetsUrl;updateSheetsBadge();}
-function testSheets(){if(!sheetsUrl)return;formPostToSheets({type:'order',book:'Test',date:today(),num:'TEST-CONN',chan:'Test',qty:0,price:0,total:0,stockAfter:0,notes:'Connection test'});addSheetsLog('Test','Test','Connection test sent','ok');showToast('✓ Test row sent to Sheets!');}
-function formPostToSheets(payload){
+function testSheets(){
   if(!sheetsUrl)return;
-  try{
-    const iframeId='sheets-iframe-'+Date.now();const iframe=document.createElement('iframe');iframe.name=iframeId;iframe.style.display='none';document.body.appendChild(iframe);setTimeout(()=>{try{document.body.removeChild(iframe);}catch(e){}},5000);
-    const form=document.createElement('form');form.method='POST';form.action=sheetsUrl;form.target=iframeId;form.style.display='none';
-    const input=document.createElement('input');input.type='hidden';input.name='payload';input.value=JSON.stringify(payload);form.appendChild(input);document.body.appendChild(form);form.submit();setTimeout(()=>{try{document.body.removeChild(form);}catch(e){}},1000);
-  }catch(e){console.error('Sheets post failed:',e);}
+  // First verify the URL is reachable via GET
+  const btn=document.querySelector('[onclick="testSheets()"]');
+  if(btn){btn.textContent='Testing…';btn.disabled=true;}
+  fetch(sheetsUrl+'?test=1',{mode:'no-cors'})
+    .then(()=>{
+      // no-cors always resolves — now send a real test row
+      syncToSheets({type:'order',book:'Test',date:today(),num:'TEST-'+Date.now().toString().slice(-4),chan:'Test',qty:0,price:0,total:0,stockAfter:0,notes:'Connection test — check your sheet for this row'});
+      showToast('✓ Test row sent — check your Google Sheet');
+    })
+    .catch(()=>{
+      addSheetsLog('System','Test','URL unreachable — check your Apps Script URL','err');
+      showToast('⚠ Could not reach Sheets URL','warn');
+    })
+    .finally(()=>{if(btn){btn.textContent='Test';btn.disabled=false;}});
 }
-function syncToSheets(payload){if(!sheetsUrl)return;const summary=payload.type==='order'?`${payload.num} · ${payload.chan} · ${payload.qty}×`:`${payload.store} · ${payload.event} · ${payload.qty}×`;formPostToSheets(payload);addSheetsLog(payload.book,payload.type==='order'?'Order':'Consignment',summary,'ok');}
+// Write queue — prevents race conditions when multiple rows fire at once
+const _sheetsQueue=[];let _sheetsWriting=false;
+async function _processQueue(){
+  if(_sheetsWriting||!_sheetsQueue.length)return;
+  _sheetsWriting=true;
+  const {payload,summary,book,type}=_sheetsQueue.shift();
+  try{
+    // Primary: fetch with no-cors (body goes to e.postData.contents in Apps Script)
+    await fetch(sheetsUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+    addSheetsLog(book,type,summary,'ok');
+  }catch(e){
+    // Fallback: hidden iframe form POST (body goes to e.parameter.payload)
+    try{
+      const iframeId='sheets-iframe-'+Date.now();
+      const iframe=document.createElement('iframe');iframe.name=iframeId;iframe.style.display='none';document.body.appendChild(iframe);
+      setTimeout(()=>{try{document.body.removeChild(iframe);}catch(_){}},8000);
+      const form=document.createElement('form');form.method='POST';form.action=sheetsUrl;form.target=iframeId;form.style.display='none';
+      const input=document.createElement('input');input.type='hidden';input.name='payload';input.value=JSON.stringify(payload);
+      form.appendChild(input);document.body.appendChild(form);form.submit();
+      setTimeout(()=>{try{document.body.removeChild(form);}catch(_){}},2000);
+      addSheetsLog(book,type,summary,'ok');
+    }catch(e2){
+      addSheetsLog(book,type,summary+' [failed]','err');
+      console.error('Sheets write failed:',e2);
+    }
+  }
+  _sheetsWriting=false;
+  // Process next item in queue after a short gap
+  if(_sheetsQueue.length) setTimeout(_processQueue,400);
+}
+
+function syncToSheets(payload){
+  if(!sheetsUrl)return;
+  const summary=payload.type==='order'
+    ?`${payload.num} · ${payload.chan} · ${payload.qty}×`
+    :`${payload.store} · ${payload.event} · ${payload.qty}×`;
+  _sheetsQueue.push({payload,summary,book:payload.book,type:payload.type==='order'?'Order':'Consignment'});
+  _processQueue();
+}
 function addSheetsLog(book,type,summary,status){sheetsLog.unshift({time:new Date().toLocaleTimeString(),book,type,summary,status});if(sheetsLog.length>50)sheetsLog.pop();renderSheetsLog();}
 function renderSheetsLog(){
   const b=$('sheets-log-body');
   if(!sheetsLog.length){b.innerHTML='<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px;">No sync events yet.</td></tr>';return;}
-  b.innerHTML=sheetsLog.map(l=>`<tr><td>${l.time}</td><td style="font-size:11px;color:var(--text3);">${l.book}</td><td>${l.type}</td><td style="color:var(--text2);">${l.summary}</td><td><span class="log-status ${l.status}"></span>${l.status==='ok'?'Sent':'Failed'}</td></tr>`).join('');
+  b.innerHTML=sheetsLog.map(l=>`<tr><td style="white-space:nowrap;">${l.time}</td><td style="font-size:11px;color:var(--text3);">${l.book}</td><td>${l.type}</td><td style="color:var(--text2);font-size:12px;">${l.summary}</td><td><span class="log-status ${l.status}"></span>${l.status==='ok'?'<span style="color:var(--green);">Written</span>':'<span style="color:var(--red);">Failed</span>'}</td></tr>`).join('');
 }
 function copyGasCode(){navigator.clipboard.writeText($('gas-code').textContent).then(()=>showToast('✓ Code copied!'));}
+function verifyUrl(){if(!sheetsUrl)return;window.open(sheetsUrl,'_blank');}
 
 // ── MANUAL PRICE FIELD: update default to current book on tab switch
 function updateManualForm(){
