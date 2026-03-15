@@ -3,34 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lyricalmyrical Books · repository</title>
+<title>Lyricalmyrical Books · Publisher OS</title>
 
 <!-- Firebase -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue, get }
+                              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
   const firebaseConfig = {
-    apiKey:"AIzaSyB0BTOjfUFZKCVth9eR8iN0mvfkpRIFKSI",
-    authDomain:"lyricalmyrical-37c46.firebaseapp.com",
-    databaseURL:"https://lyricalmyrical-37c46-default-rtdb.firebaseio.com",
-    projectId:"lyricalmyrical-37c46",
-    storageBucket:"lyricalmyrical-37c46.firebasestorage.app",
-    messagingSenderId:"448719824639",
-    appId:"1:448719824639:web:2aa79291b13bf6716ececa"
+    apiKey:            "AIzaSyB0BTOjfUFZKCVth9eR8iN0mvfkpRIFKSI",
+    authDomain:        "lyricalmyrical-37c46.firebaseapp.com",
+    databaseURL:       "https://lyricalmyrical-37c46-default-rtdb.firebaseio.com",
+    projectId:         "lyricalmyrical-37c46",
+    storageBucket:     "lyricalmyrical-37c46.firebasestorage.app",
+    messagingSenderId: "448719824639",
+    appId:             "1:448719824639:web:2aa79291b13bf6716ececa"
   };
   const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  // Per-book save/load
-  window._fbSave = async (bookId, json) => {
-    await set(ref(db, `lyrical/books/${bookId}`), { data: json, ts: Date.now() });
-  };
-  window._fbLoad = async (bookId) => {
-    const s = await get(ref(db, `lyrical/books/${bookId}`));
-    return s.exists() ? s.val().data : null;
-  };
-  window._fbWatch = (bookId, cb) => {
-    onValue(ref(db, `lyrical/books/${bookId}`), s => { if (s.exists()) cb(s.val().data); });
-  };
+  const db  = getDatabase(app);
+  const STATE_REF = ref(db, 'lyrical/state');
+  window._fbSave  = async (json) => { await set(STATE_REF, { data: json, ts: Date.now() }); };
+  window._fbLoad  = async () => { const s = await get(STATE_REF); return s.exists() ? s.val().data : null; };
+  window._fbWatch = (cb) => { onValue(STATE_REF, s => { if (s.exists()) cb(s.val().data); }); };
   window._fbReady = true;
   document.dispatchEvent(new Event('firebase-ready'));
 </script>
@@ -53,9 +47,6 @@
   --r:5px; --r2:10px; --r3:16px;
   --shadow:0 2px 12px rgba(14,12,10,.07);
   --shadow2:0 8px 32px rgba(14,12,10,.12);
-  /* Per-book accent - overridden by JS */
-  --book-accent: var(--gold2);
-  --book-accent-bg: var(--gold-bg);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--cream);font-family:'Syne',sans-serif;color:var(--text);min-height:100vh;}
@@ -81,33 +72,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .sync-label{color:rgba(255,255,255,.3);flex:1;}
 .sync-label b{color:rgba(255,255,255,.55);}
 .sync-time{color:rgba(255,255,255,.18);font-size:10px;}
-.sheets-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:600;letter-spacing:.04em;background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.2);white-space:nowrap;}
+.sheets-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:600;letter-spacing:.04em;background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.2);transition:all .3s;white-space:nowrap;}
+.sheets-badge.warn{background:rgba(251,191,36,.12);color:#fbbf24;border-color:rgba(251,191,36,.2);}
 .sheets-badge.off{background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);border-color:rgba(255,255,255,.08);}
-
-/* BOOK SWITCHER (publisher only) */
-.book-switcher{background:var(--ink3);border-bottom:1px solid rgba(255,255,255,.06);padding:0 2rem;display:flex;align-items:center;gap:0;overflow-x:auto;}
-.book-switcher::-webkit-scrollbar{display:none;}
-.book-tab{padding:.6rem 1.25rem;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.3);cursor:pointer;border:none;border-bottom:3px solid transparent;background:none;transition:all .16s;white-space:nowrap;font-family:'Syne',sans-serif;display:flex;align-items:center;gap:8px;}
-.book-tab:hover{color:rgba(255,255,255,.6);}
-.book-tab.active{color:var(--cream);border-bottom-color:var(--book-accent);}
-.book-tab .book-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.book-tab-all{color:rgba(255,255,255,.5);font-size:10px;font-weight:600;letter-spacing:.14em;}
-.book-tab-all.active{color:var(--gold3);}
-
-/* COMBINED DASHBOARD STRIPS */
-.book-strip{background:white;border-radius:var(--r3);border:1px solid var(--border);padding:1.25rem 1.5rem;margin-bottom:12px;box-shadow:var(--shadow);display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;transition:border-color .15s;}
-.book-strip:hover{border-color:var(--gold-line);}
-.book-strip-accent{width:4px;height:48px;border-radius:4px;flex-shrink:0;}
-.book-strip-info{flex:1;min-width:160px;}
-.book-strip-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--text);margin-bottom:2px;}
-.book-strip-meta{font-size:11px;color:var(--text3);}
-.book-strip-kpis{display:flex;gap:1.5rem;flex-wrap:wrap;}
-.bsk{text-align:right;}
-.bsk-val{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--text);}
-.bsk-val.gold{color:var(--gold);}
-.bsk-val.warn{color:#c05e00;}
-.bsk-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text4);margin-top:2px;}
-.book-strip-actions{display:flex;gap:8px;}
 
 /* TABS */
 .tab-bar{background:var(--ink2);display:flex;padding:0 2rem;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.04);}
@@ -121,25 +88,19 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .tab-panel.active{display:block;animation:slideUp .22s ease;}
 @keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-/* BOOK CONTEXT BANNER */
-.book-context{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:var(--r2);border-left:4px solid var(--book-accent);background:var(--book-accent-bg);margin-bottom:1.5rem;}
-.book-context-dot{width:10px;height:10px;border-radius:50%;background:var(--book-accent);flex-shrink:0;}
-.book-context-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--text);}
-.book-context-meta{font-size:11px;color:var(--text3);margin-top:1px;}
-
 /* KPIs */
 .kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:1.5rem;}
 .kpi{background:var(--ink);border-radius:var(--r3);padding:1.25rem 1.4rem;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.04);transition:transform .15s,box-shadow .15s;}
 .kpi:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.2);}
 .kpi::before{content:'';position:absolute;top:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.5;}
 .kpi-label{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:10px;}
-.kpi-value{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--cream);line-height:1;}
+.kpi-value{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--cream);line-height:1;letter-spacing:-.01em;}
 .kpi-value.gold{color:var(--gold3);}
 .kpi-value.warn{color:#fb923c;}
 .kpi-value.danger{color:#f87171;}
 .kpi-sub{font-size:11px;color:rgba(255,255,255,.22);margin-top:7px;}
 
-/* SECTION */
+/* SECTION HEADING */
 .sect{display:flex;align-items:center;gap:10px;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);margin-bottom:1rem;}
 .sect::after{content:'';flex:1;height:1px;background:var(--border);}
 
@@ -189,7 +150,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .btn.sm{padding:5px 11px;font-size:10px;border-radius:var(--r);}
 .btn:disabled{opacity:.35;cursor:not-allowed;}
 
-/* CARDS */
+/* CARDS / FORMS */
 .card{background:white;border-radius:var(--r3);border:1px solid var(--border);padding:1.4rem;margin-bottom:1.1rem;box-shadow:var(--shadow);}
 .form-group label{display:block;font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
 .form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 13px;font-size:13px;font-family:'Syne',sans-serif;border:1px solid var(--border);border-radius:var(--r2);background:var(--cream);color:var(--text);transition:border-color .15s,box-shadow .15s;outline:none;}
@@ -199,6 +160,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .price-wrap .sym{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text3);pointer-events:none;font-family:'DM Mono',monospace;}
 .price-wrap input{padding-left:26px;}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 .g4{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;}
 
 /* LOG */
@@ -206,6 +168,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .log-line{display:block;}
 .log-line.ok{color:#6ee7a8;}
 .log-line.warn{color:#fb923c;}
+.log-line.err{color:#f87171;}
 
 /* STORE CARDS */
 .store-card{background:white;border-radius:var(--r3);border:1px solid var(--border);padding:1.4rem;margin-bottom:14px;box-shadow:var(--shadow);transition:box-shadow .18s,border-color .18s;}
@@ -221,15 +184,18 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .store-actions{display:flex;gap:8px;flex-wrap:wrap;}
 
 /* ORDER CARDS */
-.order-card{background:white;border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--r2);padding:1rem 1.25rem;margin-bottom:10px;box-shadow:var(--shadow);}
+.order-card{background:white;border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--r2);padding:1rem 1.25rem;margin-bottom:10px;box-shadow:var(--shadow);transition:box-shadow .15s;}
+.order-card:hover{box-shadow:var(--shadow2);}
 .order-card.done{border-left-color:var(--border);opacity:.5;}
 .order-row{display:flex;justify-content:space-between;align-items:center;}
 .order-num{font-weight:600;font-size:13px;}
 .order-meta{font-size:12px;color:var(--text3);margin-top:2px;}
 
-/* GOOGLE SHEETS SETUP */
+/* SHEETS SETUP */
 .sheets-setup{background:white;border-radius:var(--r3);border:1px solid var(--border);padding:1.5rem;margin-bottom:1.5rem;box-shadow:var(--shadow);}
 .sheets-setup.connected{background:linear-gradient(135deg,#f0fdf6,#fff);border-color:rgba(42,99,72,.2);}
+.sheets-url-row{display:flex;gap:10px;align-items:flex-end;}
+.sheets-url-row .form-group{flex:1;margin:0;}
 .sheets-log-tbl{width:100%;border-collapse:collapse;font-size:12px;font-family:'DM Mono',monospace;}
 .sheets-log-tbl th{text-align:left;padding:7px 12px;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);}
 .sheets-log-tbl td{padding:7px 12px;border-bottom:1px solid var(--border2);vertical-align:middle;}
@@ -258,45 +224,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .empty-state .e-icon{font-size:36px;margin-bottom:.75rem;opacity:.35;}
 .spinner{display:inline-block;width:11px;height:11px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .65s linear infinite;vertical-align:middle;margin-right:5px;}
 @keyframes spin{to{transform:rotate(360deg)}}
+.row-between{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
 
 /* TOAST */
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--ink);color:var(--cream);font-size:12px;font-family:'DM Mono',monospace;padding:11px 18px;border-radius:var(--r2);border-left:3px solid #4ade80;box-shadow:var(--shadow2);z-index:300;opacity:0;transform:translateY(10px);transition:opacity .22s,transform .22s;pointer-events:none;max-width:320px;}
 .toast.show{opacity:1;transform:translateY(0);}
 .toast.warn{border-left-color:#fb923c;}
-
-/* EDIT / VOID */
-.tbl tbody tr.voided td{opacity:.35;}
-.tbl tbody tr.voided td:not(:last-child){text-decoration:line-through;}
-.edit-btn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:var(--r);background:transparent;border:1px solid transparent;color:var(--text4);cursor:pointer;font-size:13px;transition:all .14s;vertical-align:middle;margin-left:4px;opacity:0;}
-.tbl tbody tr:hover .edit-btn{opacity:1;background:var(--cream2);border-color:var(--border);color:var(--text2);}
-.edit-btn:hover{background:var(--gold-bg) !important;border-color:var(--gold-line) !important;color:var(--gold) !important;}
-.void-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.06em;background:var(--red-bg);color:var(--red);}
-.edit-modal{max-width:560px;}
-.edit-modal-type{display:inline-flex;align-items:center;padding:3px 10px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:var(--cream3);color:var(--text3);margin-bottom:1rem;}
-.edit-diff{display:flex;align-items:center;gap:6px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);margin-top:5px;}
-.edit-diff .old{text-decoration:line-through;}
-.edit-diff .arr{color:var(--gold);}
-.edit-diff .new-val{color:var(--green);font-weight:600;}
-.void-zone{margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border);}
-.void-zone-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:.5rem;}
-.void-zone-body{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:.75rem;}
-
-/* PASSWORD GATE */
-#pw-gate{position:fixed;inset:0;z-index:9999;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:1.5rem;}
-#pw-gate .box{width:100%;max-width:360px;text-align:center;}
-#pw-gate .wm{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--cream);margin-bottom:4px;}
-#pw-gate .sub{font-size:9px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--gold2);margin-bottom:2.5rem;}
-#pw-gate input{display:block;width:100%;padding:13px 16px;margin-bottom:10px;font-size:16px;font-family:'Syne',sans-serif;text-align:center;letter-spacing:.08em;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:var(--r2);color:var(--cream);outline:none;transition:border-color .2s,box-shadow .2s;}
-#pw-gate input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,145,58,.18);}
-#pw-gate input.bad{border-color:#f87171 !important;animation:pwshake .35s ease;}
-@keyframes pwshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
-#pw-gate button{width:100%;padding:13px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:var(--gold);color:var(--ink);border:none;border-radius:var(--r2);cursor:pointer;transition:background .15s;}
-#pw-gate button:hover{background:var(--gold2);}
-#pw-gate .err{min-height:20px;margin-top:10px;font-family:'DM Mono',monospace;font-size:12px;color:#f87171;}
-
-/* AUTHOR VIEW */
-.author-mode .book-switcher{display:none;}
-.author-watermark{font-size:10px;color:rgba(255,255,255,.2);font-family:'DM Mono',monospace;letter-spacing:.05em;}
+.toast.err{border-left-color:#f87171;}
 
 @media(max-width:640px){
   .kpi-grid{grid-template-columns:1fr 1fr;}
@@ -304,25 +238,35 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
   .app-header{padding:0 1rem;}
   .tab-panel{padding:1rem;}
   .header-stat:nth-child(3){display:none;}
-  .book-strip-kpis{gap:.75rem;}
 }
+
+/* PASSWORD GATE */
+.pw-gate{position:fixed;inset:0;z-index:999;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:1.5rem;}
+.pw-box{width:100%;max-width:380px;text-align:center;}
+.pw-wordmark{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--cream);margin-bottom:6px;}
+.pw-sub{font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold2);margin-bottom:2.5rem;}
+.pw-box input{width:100%;padding:12px 16px;font-size:15px;font-family:'Syne',sans-serif;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--r2);color:var(--cream);outline:none;text-align:center;letter-spacing:.1em;transition:border-color .2s,box-shadow .2s;margin-bottom:12px;}
+.pw-box input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,145,58,.15);}
+.pw-box input.shake{animation:shake .35s ease;}
+.pw-box input.error{border-color:#f87171;box-shadow:0 0 0 3px rgba(248,113,113,.15);}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.pw-btn{width:100%;padding:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:var(--gold);color:var(--ink);border:none;border-radius:var(--r2);cursor:pointer;transition:background .15s;}
+.pw-btn:hover{background:var(--gold2);}
+.pw-err{font-size:12px;color:#f87171;margin-top:10px;min-height:18px;font-family:'DM Mono',monospace;}
 </style>
 </head>
 <body>
-
-<!-- PASSWORD GATE (publisher only — hidden in author mode) -->
-<div id="pw-gate">
-  <div class="box">
-    <div class="wm">Lyricalmyrical Books</div>
-    <div class="sub">Publisher OS</div>
-    <input type="password" id="pw-input" placeholder="Publisher password" onkeydown="if(event.key==='Enter')tryUnlock()">
-    <button onclick="tryUnlock()">Unlock</button>
-    <div class="err" id="pw-err"></div>
+<div class="pw-gate" id="pw-gate">
+  <div class="pw-box">
+    <div class="pw-wordmark">Lyricalmyrical Books</div>
+    <div class="pw-sub">Publisher OS</div>
+    <input type="password" id="pw-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="pw-btn" onclick="checkPw()">Unlock</button>
+    <div class="pw-err" id="pw-err"></div>
   </div>
 </div>
 
-<div id="pw-app" style="display:none;">
-<div class="app" id="main-app">
+<div class="app" id="main-app" style="display:none;">
 
 <header class="app-header">
   <div class="header-brand">
@@ -341,86 +285,51 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
   <div class="sync-label" id="sync-label"><b>Firebase</b> · connecting…</div>
   <div class="sync-time" id="sync-time"></div>
   <span class="sheets-badge off" id="sheets-badge">📊 Sheets: not set up</span>
-  <a id="sheets-open-link" href="#" target="_blank" style="display:none;font-family:'DM Mono',monospace;font-size:10px;color:var(--gold2);text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">↗ Open</a>
-  <span class="author-watermark" id="author-watermark" style="display:none;"></span>
+  <a id="sheets-open-link" href="#" target="_blank" style="display:none;font-family:'DM Mono',monospace;font-size:10px;color:var(--gold2);text-decoration:none;letter-spacing:.04em;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">↗ Open</a>
   <button class="btn sm" style="font-size:10px;padding:3px 9px;background:transparent;color:rgba(255,255,255,.35);border-color:rgba(255,255,255,.1);" onclick="forceSync()">↺ Refresh</button>
 </div>
 
-<!-- BOOK SWITCHER (publisher only) -->
-<div class="book-switcher" id="book-switcher">
-  <button class="book-tab book-tab-all active" onclick="switchBook('all')" id="btab-all">📚 All books</button>
-  <!-- Book tabs injected by JS -->
-</div>
-
-<!-- TABS (per-book) -->
-<nav class="tab-bar" id="tab-bar">
+<nav class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
   <button class="tab-btn" onclick="switchTab('website')">Website orders</button>
   <button class="tab-btn" onclick="switchTab('manual')">Manual entry</button>
   <button class="tab-btn" onclick="switchTab('consignment')">Consignment</button>
   <button class="tab-btn" onclick="switchTab('history')">History</button>
-  <button class="tab-btn" onclick="switchTab('sheets')" id="sheets-tab-btn">📊 Sheets</button>
+  <button class="tab-btn" onclick="switchTab('sheets')">📊 Google Sheets</button>
 </nav>
 
-<!-- COMBINED OVERVIEW (shown when book = 'all') -->
-<div class="tab-panel active" id="tab-all-overview">
-  <div class="sect">All books — inventory overview</div>
-  <div id="all-books-list"><!-- rendered by JS --></div>
-
-  <div class="sect">Combined sales by channel</div>
-  <div class="tbl-wrap">
-    <table class="tbl"><thead><tr><th>Book</th><th>Channel</th><th class="r">Transactions</th><th class="r">Units</th><th class="r">Revenue</th></tr></thead>
-    <tbody id="all-ch-body"></tbody></table>
-  </div>
-
-  <div class="sect">Combined consignment summary</div>
-  <div class="tbl-wrap">
-    <table class="tbl"><thead><tr><th>Book</th><th>Store</th><th class="r">Sent</th><th class="r">Sold</th><th class="r">Outstanding</th><th>Status</th></tr></thead>
-    <tbody id="all-con-body"></tbody></table>
-  </div>
-</div>
-
-<!-- DASHBOARD (per book) -->
-<div class="tab-panel" id="tab-dashboard" style="display:none;">
-  <div class="book-context" id="book-context-dash">
-    <div class="book-context-dot"></div>
-    <div><div class="book-context-title" id="bc-title-dash">—</div><div class="book-context-meta" id="bc-meta-dash">—</div></div>
-  </div>
+<!-- DASHBOARD -->
+<div class="tab-panel active" id="tab-dashboard">
   <div class="kpi-grid">
-    <div class="kpi"><div class="kpi-label">Stock on hand</div><div class="kpi-value gold" id="d-stock">—</div><div class="kpi-sub" id="d-stock-sub">of — printed</div></div>
+    <div class="kpi"><div class="kpi-label">Stock on hand</div><div class="kpi-value gold" id="d-stock">—</div><div class="kpi-sub">of 120 printed</div></div>
     <div class="kpi"><div class="kpi-label">Revenue</div><div class="kpi-value gold" id="d-revenue">—</div><div class="kpi-sub">publisher net</div></div>
     <div class="kpi"><div class="kpi-label">Units sold</div><div class="kpi-value" id="d-sold">—</div><div class="kpi-sub" id="d-avg-sub">avg —</div></div>
     <div class="kpi"><div class="kpi-label">On consignment</div><div class="kpi-value" id="d-consigned">—</div><div class="kpi-sub">across <span id="d-stores">0</span> stores</div></div>
     <div class="kpi"><div class="kpi-label">Owed to you</div><div class="kpi-value warn" id="d-owed">—</div><div class="kpi-sub">consignment pending</div></div>
-    <div class="kpi"><div class="kpi-label">Stock status</div><div class="kpi-value" id="d-low">—</div><div class="kpi-sub" id="d-thresh-sub">threshold: — units</div></div>
+    <div class="kpi"><div class="kpi-label">Stock status</div><div class="kpi-value" id="d-low">—</div><div class="kpi-sub">threshold: 15 units</div></div>
   </div>
   <div class="sect">Sales by channel</div>
-  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Channel</th><th class="r">Transactions</th><th class="r">Units</th><th class="r">Revenue</th></tr></thead><tbody id="ch-body"></tbody></table></div>
+  <div class="tbl-wrap">
+    <table class="tbl"><thead><tr><th>Channel</th><th class="r">Transactions</th><th class="r">Units</th><th class="r">Revenue</th></tr></thead><tbody id="ch-body"></tbody></table>
+  </div>
   <div class="sect">Consignment overview</div>
-  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Store</th><th class="r">Sent</th><th class="r">Sold</th><th class="r">Returned</th><th class="r">Outstanding</th><th>Status</th></tr></thead><tbody id="dash-con-body"></tbody></table></div>
+  <div class="tbl-wrap">
+    <table class="tbl"><thead><tr><th>Store</th><th class="r">Sent</th><th class="r">Sold</th><th class="r">Returned</th><th class="r">Outstanding</th><th>Status</th></tr></thead><tbody id="dash-con-body"></tbody></table>
+  </div>
   <div class="sect">Inventory</div>
   <div class="stock-block">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;">
-      <div><div class="stock-title" id="d-book-title">—</div><div class="stock-author" id="d-book-author">—</div></div>
-      <span class="pill gold" id="d-book-isbn">—</span>
+      <div><div class="stock-title">Un Fantastico Altrove</div><div class="stock-author">Silvia Clo Di Gregorio &nbsp;·&nbsp; List price €40.00</div></div>
+      <span class="pill gold">ISBN 978-88-XXXXXX</span>
     </div>
     <div class="bar-track"><div class="bar-fill" id="d-bar" style="width:100%;background:var(--gold2);"></div></div>
-    <div class="bar-meta"><span id="d-bar-label">— / — on hand</span><span id="d-thresh-label">Alert at — units</span></div>
+    <div class="bar-meta"><span id="d-bar-label">— / 120 on hand</span><span>Alert at 15 units</span></div>
     <div class="stock-alert ok" id="d-alert">Loading…</div>
-  </div>
-  <div class="sect" id="danger-zone-sect" style="display:none;">Danger zone</div>
-  <div id="danger-zone-block" style="display:none;background:white;border-radius:var(--r3);border:1px solid var(--border);padding:1.25rem;box-shadow:var(--shadow);display:none;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
-    <div><div style="font-weight:700;font-size:13px;margin-bottom:3px;">Reset all sales data for this book</div><div style="font-size:12px;color:var(--text3);">Clears orders, history and consignment for this book only. Your Google Sheet is untouched.</div></div>
-    <button class="btn danger-btn" onclick="resetBookData()">⚠ Reset book data</button>
   </div>
 </div>
 
 <!-- WEBSITE -->
-<div class="tab-panel" id="tab-website" style="display:none;">
-  <div class="book-context" id="book-context-web">
-    <div class="book-context-dot"></div>
-    <div><div class="book-context-title" id="bc-title-web">—</div><div class="book-context-meta">Website orders via Gmail scan</div></div>
-  </div>
+<div class="tab-panel" id="tab-website">
   <div class="row-between">
     <div class="section-hed">Big Cartel orders</div>
     <button class="btn ink" id="scan-btn" onclick="fetchOrders()">Scan Gmail</button>
@@ -431,17 +340,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 </div>
 
 <!-- MANUAL -->
-<div class="tab-panel" id="tab-manual" style="display:none;">
-  <div class="book-context" id="book-context-man">
-    <div class="book-context-dot"></div>
-    <div><div class="book-context-title" id="bc-title-man">—</div><div class="book-context-meta">Manual order entry</div></div>
-  </div>
+<div class="tab-panel" id="tab-manual">
   <div class="section-hed" style="margin-bottom:1.25rem;">Log an order</div>
   <div class="card">
     <div class="g4" style="margin-bottom:12px;">
       <div class="form-group"><label>Order #</label><input type="text" id="m-num" placeholder="optional"></div>
       <div class="form-group"><label>Qty</label><input type="number" id="m-qty" value="1" min="1" oninput="phint()"></div>
-      <div class="form-group"><label>Price paid</label><div class="price-wrap"><span class="sym" id="m-sym">€</span><input type="number" id="m-price" value="40.00" step="0.01" oninput="phint()"></div></div>
+      <div class="form-group"><label>Price paid (€)</label><div class="price-wrap"><span class="sym">€</span><input type="number" id="m-price" value="40.00" step="0.01" oninput="phint()"></div></div>
       <div class="form-group"><label>&nbsp;</label><button class="btn gold" style="width:100%;height:38px;" onclick="submitManual()">Add order</button></div>
     </div>
     <div class="g2">
@@ -454,11 +359,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 </div>
 
 <!-- CONSIGNMENT -->
-<div class="tab-panel" id="tab-consignment" style="display:none;">
-  <div class="book-context" id="book-context-con">
-    <div class="book-context-dot"></div>
-    <div><div class="book-context-title" id="bc-title-con">—</div><div class="book-context-meta">Consignment accounts & ledger</div></div>
-  </div>
+<div class="tab-panel" id="tab-consignment">
   <div class="row-between">
     <div class="section-hed">Consignment accounts</div>
     <button class="btn gold" onclick="openM('add-store')">+ Add store</button>
@@ -466,166 +367,169 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
   <div id="stores-list"><div class="empty-state"><div class="e-icon">🏪</div>No stores yet.</div></div>
   <div class="divider"></div>
   <div class="sect">Consignment ledger</div>
-  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Store</th><th>Type</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">Due to you</th><th>Notes</th><th>Status</th></tr></thead><tbody id="ledger-body"></tbody></table></div>
+  <div class="tbl-wrap">
+    <table class="tbl"><thead><tr><th>Date</th><th>Store</th><th>Type</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">Due to you</th><th>Notes</th><th>Status</th></tr></thead><tbody id="ledger-body"></tbody></table>
+  </div>
 </div>
 
 <!-- HISTORY -->
-<div class="tab-panel" id="tab-history" style="display:none;">
-  <div class="book-context" id="book-context-hist">
-    <div class="book-context-dot"></div>
-    <div><div class="book-context-title" id="bc-title-hist">—</div><div class="book-context-meta">Full order history</div></div>
-  </div>
+<div class="tab-panel" id="tab-history">
   <div class="row-between">
     <div class="section-hed">Order history</div>
     <span class="save-indicator" id="save-ind">✓ Saved</span>
   </div>
-  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Order #</th><th>Channel</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Total</th><th class="r">Stock after</th><th>Notes</th><th>Date</th></tr></thead><tbody id="hist-body"></tbody></table></div>
+  <div class="tbl-wrap">
+    <table class="tbl"><thead><tr><th>Order #</th><th>Channel</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Total</th><th class="r">Stock after</th><th>Notes</th><th>Date</th></tr></thead><tbody id="hist-body"></tbody></table>
+  </div>
 </div>
 
 <!-- GOOGLE SHEETS -->
-<div class="tab-panel" id="tab-sheets" style="display:none;">
+<div class="tab-panel" id="tab-sheets">
   <div class="row-between">
     <div class="section-hed">Google Sheets sync</div>
     <span class="sheets-badge off" id="sheets-badge2">Not connected</span>
   </div>
+
   <div class="sheets-setup" id="sheets-setup-card">
     <div style="margin-bottom:1.5rem;">
       <div style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:8px;">Connect your Google Sheet</div>
-      <div style="font-size:13px;color:var(--text2);line-height:1.7;">Uses a Google Apps Script webhook — paste your Web App URL once and every order syncs automatically. One connection covers all books.</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.7;">
+        Uses a <strong>Google Apps Script webhook</strong> — no OAuth tokens, no expiry, works forever automatically.
+        Do this once and every order syncs to your sheet instantly.
+      </div>
     </div>
+
     <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:1.75rem;">
+
       <div style="display:flex;gap:14px;align-items:flex-start;">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--gold3);font-family:'DM Mono',monospace;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--gold3);font-family:'DM Mono',monospace;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:500;">1</div>
         <div>
-          <div style="font-weight:700;font-size:13px;margin-bottom:4px;">Create a Google Sheet → Extensions → Apps Script</div>
-          <div style="font-size:12px;color:var(--text3);">Go to <a href="https://sheets.new" target="_blank" style="color:var(--gold);">sheets.new</a>, then Extensions → Apps Script.</div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;">Create a Google Sheet and open Extensions → Apps Script</div>
+          <div style="font-size:12px;color:var(--text3);">Go to <a href="https://sheets.new" target="_blank" style="color:var(--gold);">sheets.new</a> to create a fresh sheet, then click Extensions in the menu bar → Apps Script.</div>
         </div>
       </div>
+
       <div style="display:flex;gap:14px;align-items:flex-start;">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--gold3);font-family:'DM Mono',monospace;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--gold3);font-family:'DM Mono',monospace;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:500;">2</div>
         <div style="flex:1;">
-          <div style="font-weight:700;font-size:13px;margin-bottom:8px;">Paste this code → Deploy → <span style="color:var(--gold);">New deployment</span> → Web App → Execute as: Me → Who has access: Anyone</div>
-          <div style="font-size:12px;color:var(--red-bg);background:var(--red);padding:6px 10px;border-radius:4px;margin-bottom:8px;font-weight:600;">⚠ Every code change needs a NEW deployment — not "Manage deployments". Copy the new URL each time.</div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:8px;">Delete everything in the editor, paste the code below, then click Deploy → New deployment → Web app</div>
           <div style="position:relative;">
-            <pre id="gas-code" style="background:var(--ink);color:#a8d8a8;font-family:'DM Mono',monospace;font-size:11px;padding:16px;border-radius:var(--r2);overflow-x:auto;line-height:1.75;white-space:pre-wrap;">// Lyricalmyrical Books — Google Sheets sync
-// Handles both fetch() no-cors (raw body) and form POST (e.parameter)
-function doPost(e) {
+            <pre id="gas-code" style="background:var(--ink);color:#a8d8a8;font-family:'DM Mono',monospace;font-size:11px;padding:16px;border-radius:var(--r2);overflow-x:auto;line-height:1.75;border:1px solid rgba(255,255,255,.08);white-space:pre-wrap;">function doPost(e) {
   try {
-    var raw = '';
-
-    // Try raw body first (from fetch no-cors)
-    if (e.postData && e.postData.contents) {
-      raw = e.postData.contents;
-    }
-
-    // Fall back to form parameter
-    if (!raw && e.parameter && e.parameter.payload) {
-      raw = e.parameter.payload;
-    }
-
-    if (!raw) throw new Error('No data received');
-
-    var data = JSON.parse(raw);
+    var data = JSON.parse(e.postData.contents);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var bookName = (data.book || 'Unknown').replace(/[^a-zA-Z0-9 \-]/g, '');
-    var timestamp = new Date().toLocaleString('en-GB');
 
     if (data.type === 'order') {
-      var sheetName = bookName + ' — Orders';
-      var sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
+      var sheet = ss.getSheetByName('Orders') || ss.insertSheet('Orders');
       if (sheet.getLastRow() === 0) {
-        sheet.appendRow(['Logged at','Date','Order #','Channel','Qty','Unit Price','Total','Stock After','Notes']);
-        sheet.getRange(1,1,1,9).setFontWeight('bold').setBackground('#0e0c0a').setFontColor('#f0c060');
-        sheet.setFrozenRows(1);
+        sheet.appendRow(['Date','Order #','Channel','Qty','Unit Price','Total','Stock After','Notes']);
+        sheet.getRange(1,1,1,8).setFontWeight('bold').setBackground('#0e0c0a').setFontColor('#f0c060');
       }
-      sheet.appendRow([timestamp, data.date, data.num, data.chan, data.qty, data.price, data.total, data.stockAfter, data.notes||'']);
+      sheet.appendRow([data.date, data.num, data.chan, data.qty, data.price, data.total, data.stockAfter, data.notes]);
     }
 
     if (data.type === 'consignment') {
-      var csName = bookName + ' — Consignment';
-      var cs = ss.getSheetByName(csName) || ss.insertSheet(csName);
+      var cs = ss.getSheetByName('Consignment') || ss.insertSheet('Consignment');
       if (cs.getLastRow() === 0) {
-        cs.appendRow(['Logged at','Date','Store','Event','Qty','Rate %','Amount Due','Notes','Status']);
-        cs.getRange(1,1,1,9).setFontWeight('bold').setBackground('#0e0c0a').setFontColor('#f0c060');
-        cs.setFrozenRows(1);
+        cs.appendRow(['Date','Store','Event','Qty','Rate %','Amount Due','Notes','Status']);
+        cs.getRange(1,1,1,8).setFontWeight('bold').setBackground('#0e0c0a').setFontColor('#f0c060');
       }
-      cs.appendRow([timestamp, data.date, data.store||'', data.event||'', data.qty, data.rate||'', data.amountDue||0, data.notes||'', data.status||'']);
+      cs.appendRow([data.date, data.store, data.event, data.qty, data.rate, data.amountDue, data.notes, data.status]);
     }
 
-    var output = ContentService.createTextOutput(JSON.stringify({ok:true,ts:timestamp}));
-    output.setMimeType(ContentService.MimeType.JSON);
-    return output;
-
+    return ContentService
+      .createTextOutput(JSON.stringify({ok:true}))
+      .setMimeType(ContentService.MimeType.JSON);
   } catch(err) {
-    var errOut = ContentService.createTextOutput(JSON.stringify({ok:false,error:err.message}));
-    errOut.setMimeType(ContentService.MimeType.JSON);
-    return errOut;
+    return ContentService
+      .createTextOutput(JSON.stringify({ok:false, error:err.message}))
+      .setMimeType(ContentService.MimeType.JSON);
   }
-}
-
-// Test with GET so you can verify deployment in browser
-function doGet(e) {
-  return ContentService.createTextOutput(JSON.stringify({ok:true,msg:'Lyricalmyrical Sheets webhook is live'})).setMimeType(ContentService.MimeType.JSON);
 }</pre>
-            <button class="btn sm" style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.15);" onclick="copyGasCode()">Copy</button>
+            <button class="btn sm" style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.15);" onclick="copyGasCode()">Copy code</button>
           </div>
-          <div style="font-size:12px;color:var(--text3);margin-top:10px;line-height:1.6;">The script creates a separate sheet tab per book automatically (e.g. "Un Fantastico Altrove — Orders" and "The Hound — Orders").</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:10px;line-height:1.6;">
+            When the Deploy dialog opens: set <strong>Execute as → Me</strong> and <strong>Who has access → Anyone</strong>. Click Deploy and copy the Web App URL.
+          </div>
         </div>
       </div>
+
       <div style="display:flex;gap:14px;align-items:flex-start;">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--gold3);font-family:'DM Mono',monospace;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--gold3);font-family:'DM Mono',monospace;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:500;">3</div>
         <div style="flex:1;">
-          <div style="font-weight:700;font-size:13px;margin-bottom:10px;">Paste your URLs and connect</div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:10px;">Paste your URLs here and click Connect</div>
           <div style="display:flex;flex-direction:column;gap:10px;">
-            <div class="form-group" style="margin:0;"><label>Web App URL</label><input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/…/exec"></div>
-            <div class="form-group" style="margin:0;"><label>Google Sheet URL (for the Open link)</label><input type="url" id="sheets-spreadsheet-input" placeholder="https://docs.google.com/spreadsheets/d/…"></div>
+            <div class="form-group" style="margin:0;">
+              <label>Web App URL (from Deploy screen)</label>
+              <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/…/exec">
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label>Google Sheet URL (for the "Open sheet" link)</label>
+              <input type="url" id="sheets-spreadsheet-input" placeholder="https://docs.google.com/spreadsheets/d/…">
+            </div>
             <div><button class="btn gold" onclick="connectSheets()">Connect</button></div>
           </div>
         </div>
       </div>
+
     </div>
   </div>
+
+  <!-- Connected state -->
   <div id="sheets-connected-card" style="display:none;">
     <div class="sheets-setup connected" style="margin-bottom:1.5rem;">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
         <div>
-          <div style="font-weight:700;font-size:14px;color:var(--green);margin-bottom:4px;">✓ Google Sheets connected — all books sync here</div>
+          <div style="font-weight:700;font-size:14px;color:var(--green);margin-bottom:4px;">✓ Google Sheets connected</div>
           <div style="font-size:12px;color:var(--text3);word-break:break-all;" id="sheets-url-display"></div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
           <a id="open-sheet-link" href="#" target="_blank" class="btn gold" style="text-decoration:none;display:none;">↗ Open sheet</a>
           <button class="btn sm" onclick="testSheets()">Test connection</button>
-          <button class="btn sm" id="verify-url-btn" onclick="verifyUrl()" style="font-size:10px;">↗ Verify URL</button>
           <button class="btn sm danger-btn" onclick="disconnectSheets()">Disconnect</button>
         </div>
       </div>
     </div>
   </div>
+
   <div class="sect">Sync log</div>
   <div class="tbl-wrap">
     <table class="sheets-log-tbl">
-      <thead><tr><th>Time</th><th>Book</th><th>Type</th><th>Summary</th><th>Status</th></tr></thead>
-      <tbody id="sheets-log-body"><tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px;">No sync events yet.</td></tr></tbody>
+      <thead><tr><th>Time</th><th>Type</th><th>Summary</th><th>Status</th></tr></thead>
+      <tbody id="sheets-log-body">
+        <tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px;">No sync events yet — they'll appear here as you log orders.</td></tr>
+      </tbody>
     </table>
   </div>
 </div>
 
 </div><!-- /.app -->
-</div><!-- /#pw-app -->
 
 <!-- MODALS -->
 <div class="overlay" id="m-add-store" style="display:none;"><div class="modal">
   <div class="modal-title">Add consignment store</div>
-  <div class="g2" style="margin-bottom:12px;"><div class="form-group"><label>Store name *</label><input id="ns-name" placeholder="e.g. Libreria Feltrinelli"></div><div class="form-group"><label>Contact person</label><input id="ns-contact" placeholder="e.g. Maria Rossi"></div></div>
-  <div class="g2" style="margin-bottom:12px;"><div class="form-group"><label>Email</label><input id="ns-email" type="email" placeholder="store@email.com"></div><div class="form-group"><label>City</label><input id="ns-city" placeholder="e.g. Milan"></div></div>
-  <div class="g2" style="margin-bottom:12px;"><div class="form-group"><label>Commission rate (%)</label><input id="ns-rate" type="number" value="40" min="0" max="100"></div><div class="form-group"><label>Payment terms</label><select id="ns-terms"><option>Net 30</option><option>Net 60</option><option>Net 90</option><option>On sale</option><option>Quarterly</option></select></div></div>
+  <div class="g2" style="margin-bottom:12px;">
+    <div class="form-group"><label>Store name *</label><input id="ns-name" placeholder="e.g. Libreria Feltrinelli"></div>
+    <div class="form-group"><label>Contact person</label><input id="ns-contact" placeholder="e.g. Maria Rossi"></div>
+  </div>
+  <div class="g2" style="margin-bottom:12px;">
+    <div class="form-group"><label>Email</label><input id="ns-email" type="email" placeholder="store@email.com"></div>
+    <div class="form-group"><label>City</label><input id="ns-city" placeholder="e.g. Milan"></div>
+  </div>
+  <div class="g2" style="margin-bottom:12px;">
+    <div class="form-group"><label>Commission rate (%)</label><input id="ns-rate" type="number" value="40" min="0" max="100"></div>
+    <div class="form-group"><label>Payment terms</label><select id="ns-terms"><option>Net 30</option><option>Net 60</option><option>Net 90</option><option>On sale</option><option>Quarterly</option></select></div>
+  </div>
   <div class="form-group"><label>Notes</label><textarea id="ns-notes" placeholder="Special terms, delivery info…"></textarea></div>
   <div class="modal-footer"><button class="btn" onclick="closeM('add-store')">Cancel</button><button class="btn gold" onclick="addStore()">Add store</button></div>
 </div></div>
 
 <div class="overlay" id="m-send-books" style="display:none;"><div class="modal">
   <div class="modal-title">Send books to <span id="send-sname"></span></div>
-  <div class="g2" style="margin-bottom:12px;"><div class="form-group"><label>Qty to send</label><input id="send-qty" type="number" value="10" min="1"></div><div class="form-group"><label>Date sent</label><input id="send-date" type="date"></div></div>
+  <div class="g2" style="margin-bottom:12px;">
+    <div class="form-group"><label>Qty to send</label><input id="send-qty" type="number" value="10" min="1"></div>
+    <div class="form-group"><label>Date sent</label><input id="send-date" type="date"></div>
+  </div>
   <div class="form-group" style="margin-bottom:12px;"><label>Commission rate (%)</label><input id="send-rate" type="number" value="40" min="0" max="100"></div>
   <div class="form-group"><label>Notes</label><input id="send-notes" placeholder="e.g. delivery ref, batch #"></div>
   <div class="modal-footer"><button class="btn" onclick="closeM('send-books')">Cancel</button><button class="btn gold" onclick="confirmSend()">Send books</button></div>
@@ -633,547 +537,341 @@ function doGet(e) {
 
 <div class="overlay" id="m-record-sale" style="display:none;"><div class="modal">
   <div class="modal-title">Record sale — <span id="sale-sname"></span></div>
-  <div class="g2" style="margin-bottom:12px;"><div class="form-group"><label>Qty sold by store</label><input id="sale-qty" type="number" value="1" min="1"></div><div class="form-group"><label>Date</label><input id="sale-date" type="date"></div></div>
-  <div class="g2" style="margin-bottom:12px;"><div class="form-group"><label>Sale price per unit</label><div class="price-wrap"><span class="sym" id="sale-sym">€</span><input id="sale-price" type="number" value="40.00" step="0.01"></div></div><div class="form-group"><label>Payment status</label><select id="sale-paid"><option value="pending">Pending</option><option value="paid">Paid</option></select></div></div>
+  <div class="g2" style="margin-bottom:12px;">
+    <div class="form-group"><label>Qty sold by store</label><input id="sale-qty" type="number" value="1" min="1"></div>
+    <div class="form-group"><label>Date</label><input id="sale-date" type="date"></div>
+  </div>
+  <div class="g2" style="margin-bottom:12px;">
+    <div class="form-group"><label>Sale price per unit (€)</label><div class="price-wrap"><span class="sym">€</span><input id="sale-price" type="number" value="40.00" step="0.01"></div></div>
+    <div class="form-group"><label>Payment status</label><select id="sale-paid"><option value="pending">Pending</option><option value="paid">Paid</option></select></div>
+  </div>
   <div class="form-group"><label>Notes</label><input id="sale-notes" placeholder="e.g. invoice ref, reporting period"></div>
   <div class="modal-footer"><button class="btn" onclick="closeM('record-sale')">Cancel</button><button class="btn gold" onclick="confirmSale()">Record sale</button></div>
 </div></div>
 
 <div class="overlay" id="m-return" style="display:none;"><div class="modal">
   <div class="modal-title">Record return — <span id="ret-sname"></span></div>
-  <div class="g2" style="margin-bottom:12px;"><div class="form-group"><label>Qty returned</label><input id="ret-qty" type="number" value="1" min="1"></div><div class="form-group"><label>Date</label><input id="ret-date" type="date"></div></div>
+  <div class="g2" style="margin-bottom:12px;">
+    <div class="form-group"><label>Qty returned</label><input id="ret-qty" type="number" value="1" min="1"></div>
+    <div class="form-group"><label>Date</label><input id="ret-date" type="date"></div>
+  </div>
   <div class="form-group"><label>Condition</label><select id="ret-cond"><option>Good — return to stock</option><option>Damaged — write off</option></select></div>
   <div class="form-group" style="margin-top:12px;"><label>Notes</label><input id="ret-notes" placeholder="e.g. reason for return"></div>
   <div class="modal-footer"><button class="btn" onclick="closeM('return')">Cancel</button><button class="btn gold" onclick="confirmReturn()">Record return</button></div>
 </div></div>
 
-
-<!-- EDIT ENTRY MODAL -->
-<div class="overlay" id="m-edit-entry" style="display:none;"><div class="modal edit-modal">
-  <div class="modal-title" id="edit-modal-title">Edit entry</div>
-  <div class="edit-modal-type" id="edit-modal-type-badge">Order</div>
-
-  <!-- ORDER EDIT FIELDS -->
-  <div id="edit-order-fields">
-    <div class="g2" style="margin-bottom:12px;">
-      <div class="form-group"><label>Order #</label><input id="edit-num" type="text"></div>
-      <div class="form-group"><label>Date</label><input id="edit-date" type="date"></div>
-    </div>
-    <div class="g2" style="margin-bottom:12px;">
-      <div class="form-group"><label>Qty</label><input id="edit-qty" type="number" min="1"></div>
-      <div class="form-group"><label>Unit price</label><div class="price-wrap"><span class="sym" id="edit-sym">€</span><input id="edit-price" type="number" step="0.01"></div></div>
-    </div>
-    <div class="g2" style="margin-bottom:12px;">
-      <div class="form-group"><label>Channel</label><select id="edit-chan"><option>Website</option><option>In Person</option><option>Book Fair</option><option>Other</option></select></div>
-      <div class="form-group"><label>Notes</label><input id="edit-notes" type="text"></div>
-    </div>
-    <div class="edit-diff" id="edit-diff-preview" style="display:none;">Changes will recalculate stock and revenue.</div>
-  </div>
-
-  <!-- CONSIGNMENT LEDGER EDIT FIELDS -->
-  <div id="edit-ledger-fields" style="display:none;">
-    <div class="g2" style="margin-bottom:12px;">
-      <div class="form-group"><label>Date</label><input id="edit-l-date" type="date"></div>
-      <div class="form-group"><label>Qty</label><input id="edit-l-qty" type="number" min="1"></div>
-    </div>
-    <div class="g2" style="margin-bottom:12px;">
-      <div class="form-group"><label>Rate (%)</label><input id="edit-l-rate" type="number" min="0" max="100" step="0.1"></div>
-      <div class="form-group"><label>Notes</label><input id="edit-l-notes" type="text"></div>
-    </div>
-  </div>
-
-  <!-- VOID ZONE -->
-  <div class="void-zone" id="edit-void-zone">
-    <div class="void-zone-title">Void this entry</div>
-    <div class="void-zone-body" id="edit-void-body">Voiding will reverse all stock and revenue effects of this entry. The entry stays visible in history as struck-through for your records.</div>
-    <button class="btn danger-btn" id="edit-void-btn" onclick="voidEntry()">Void this entry</button>
-  </div>
-
-  <div class="modal-footer">
-    <button class="btn" onclick="closeM('edit-entry')">Cancel</button>
-    <button class="btn gold" onclick="saveEntryEdit()">Save changes</button>
-  </div>
-</div></div>
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════════
-//  BOOK CATALOGUE
-//  Add/edit books here. Each book gets its own Firebase
-//  node, its own tab, and its own shareable URL.
-// ═══════════════════════════════════════════════════════
-const BOOKS = {
-  altrove: {
-    id: 'altrove',
-    title: 'Un Fantastico Altrove',
-    author: 'Silvia Clo Di Gregorio',
-    isbn: '978-88-XXXXXX',
-    maxPrint: 120,
-    listPrice: 40,
-    currency: '€',
-    threshold: 15,
-    accent: '#c8913a',     // gold
-    accentBg: 'rgba(200,145,58,.1)',
-    urlParam: 'altrove',
-    // Password authors use to see only this book's page
-    authorPassword: 'silvia2025',
-  },
-  hound: {
-    id: 'hound',
-    title: 'The Hound',
-    author: '',             // fill in author name
-    isbn: '—',
-    maxPrint: 300,
-    listPrice: 65,
-    currency: 'CA$',
-    threshold: 30,
-    accent: '#3a7cc8',     // blue
-    accentBg: 'rgba(58,124,200,.1)',
-    urlParam: 'hound',
-    authorPassword: 'hound2025',
-  },
-};
+const LIST=40,MAX=120,THRESH=15;
+const $=id=>document.getElementById(id);
+const fmt=n=>'€'+Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+const fmtD=d=>d?new Date(d+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—';
+const today=()=>new Date().toISOString().split('T')[0];
 
-// ═══════════════════════════════════════════════════════
-//  ACCESS CONTROL
-//  URL params:
-//    ?book=hound            → author view, prompts author password
-//    ?book=hound&dev=1      → skip password (dev/testing)
-//    (no param)             → publisher gate, sees all books
-// ═══════════════════════════════════════════════════════
-const PUBLISHER_PASSWORD = '12345';
-const urlParams = new URLSearchParams(location.search);
-const URL_BOOK = urlParams.get('book');    // e.g. 'hound'
-const IS_AUTHOR_MODE = !!URL_BOOK && !!BOOKS[URL_BOOK];
-const ACTIVE_BOOK_FORCED = IS_AUTHOR_MODE ? URL_BOOK : null;
+let state={stock:120,sold:0,revenue:0,chStats:{},hist:[],stores:[],ledger:[],doneIds:[]};
+let orders=[],activeId=null,lastSavedHash='',fbReady=false;
+let sheetsUrl=localStorage.getItem('lm-sheets-url')||'';
+let sheetsSpreadsheetUrl=localStorage.getItem('lm-sheets-spreadsheet-url')||'';
+let sheetsLog=[];
 
-// ── UTILITIES
-const $ = id => document.getElementById(id);
-const fmt = (n, cur='€') => cur + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-const fmtD = d => d ? new Date(d+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—';
-const today = () => new Date().toISOString().split('T')[0];
-
-// ── PER-BOOK STATE
-// states[bookId] = { stock, sold, revenue, chStats, hist, stores, ledger, doneIds }
-let states = {};
-let activeBook = null;   // currently viewed bookId, or 'all'
-let orders = [], activeId = null;
-let fbReady = false, lastSavedHashes = {};
-let sheetsUrl = localStorage.getItem('lm-sheets-url') || '';
-let sheetsSpreadsheetUrl = localStorage.getItem('lm-sheets-spreadsheet-url') || '';
-let sheetsLog = [];
-
-function defaultState(book) {
-  return { stock: book.maxPrint, sold: 0, revenue: 0, chStats: {}, hist: [], stores: [], ledger: [], doneIds: [] };
-}
-
-function getState() { return states[activeBook] || defaultState(BOOKS[activeBook] || Object.values(BOOKS)[0]); }
-function getBook()  { return BOOKS[activeBook] || Object.values(BOOKS)[0]; }
-
-// ── TOAST
-function showToast(msg, type='ok', dur=2800) {
-  const t=$('toast'); t.textContent=msg;
+// TOAST
+function showToast(msg,type='ok',dur=2800){
+  const t=$('toast');t.textContent=msg;
   t.className='toast show'+(type==='warn'?' warn':type==='err'?' err':'');
-  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),dur);
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),dur);
 }
 
-// ── SYNC UI
-function setSyncState(status, msg) {
-  const dot=$('sync-dot'), label=$('sync-label'), time=$('sync-time');
+// SYNC UI
+function setSyncState(status,msg){
+  const dot=$('sync-dot'),label=$('sync-label'),time=$('sync-time');
   dot.className='sync-dot'+(status==='syncing'?' syncing':status==='error'?' error':'');
-  label.innerHTML=msg; time.textContent=new Date().toLocaleTimeString();
+  label.innerHTML=msg;time.textContent=new Date().toLocaleTimeString();
 }
 
-// ── FIREBASE (per-book)
-async function saveState(bookId) {
-  const json = JSON.stringify(states[bookId]);
-  if (json === lastSavedHashes[bookId]) return;
-  setSyncState('syncing', '<b>Firebase</b> · saving…');
-  try {
-    if (!fbReady) throw new Error('not ready');
-    await window._fbSave(bookId, json);
-    lastSavedHashes[bookId] = json;
-    setSyncState('ok', '<b>Firebase</b> · saved · live sync on');
-    const ind=$('save-ind'); if(ind){ind.classList.add('show');setTimeout(()=>ind.classList.remove('show'),2000);}
-  } catch(e) { setSyncState('error','<b>Firebase</b> · save failed'); console.error(e); }
+// SHEETS BADGE
+function updateSheetsBadge(){
+  [$('sheets-badge'),$('sheets-badge2')].forEach(b=>{
+    if(!b)return;
+    if(sheetsUrl){b.textContent='📊 Sheets: live';b.className='sheets-badge';}
+    else{b.textContent='📊 Sheets: not set up';b.className='sheets-badge off';}
+  });
+  // sync bar open link
+  const openLink=$('sheets-open-link');
+  if(openLink){
+    if(sheetsSpreadsheetUrl){openLink.href=sheetsSpreadsheetUrl;openLink.style.display='';}
+    else{openLink.style.display='none';}
+  }
+  // connected card open link
+  const cardLink=$('open-sheet-link');
+  if(cardLink){
+    if(sheetsSpreadsheetUrl){cardLink.href=sheetsSpreadsheetUrl;cardLink.style.display='';}
+    else{cardLink.style.display='none';}
+  }
 }
 
-async function loadBook(bookId) {
-  setSyncState('syncing', '<b>Firebase</b> · loading…');
-  try {
-    if (!fbReady) throw new Error('not ready');
-    const json = await window._fbLoad(bookId);
-    const book = BOOKS[bookId];
-    if (json) {
-      const loaded = JSON.parse(json);
-      states[bookId] = { ...defaultState(book), ...loaded };
-    } else {
-      states[bookId] = defaultState(book);
+function connectSheets(){
+  const url=$('sheets-url-input').value.trim();
+  const spreadUrl=($('sheets-spreadsheet-input').value||'').trim();
+  if(!url||!url.includes('script.google.com')){showToast('Paste a valid Apps Script URL','warn');return;}
+  sheetsUrl=url;localStorage.setItem('lm-sheets-url',url);
+  if(spreadUrl){sheetsSpreadsheetUrl=spreadUrl;localStorage.setItem('lm-sheets-spreadsheet-url',spreadUrl);}
+  showSheetsConnected();testSheets();showToast('✓ Google Sheets connected!');
+}
+function disconnectSheets(){
+  if(!confirm('Disconnect Google Sheets?'))return;
+  sheetsUrl='';sheetsSpreadsheetUrl='';
+  localStorage.removeItem('lm-sheets-url');localStorage.removeItem('lm-sheets-spreadsheet-url');
+  $('sheets-setup-card').style.display='';$('sheets-connected-card').style.display='none';
+  updateSheetsBadge();showToast('Sheets disconnected','warn');
+}
+function showSheetsConnected(){
+  $('sheets-setup-card').style.display='none';$('sheets-connected-card').style.display='';
+  $('sheets-url-display').textContent=sheetsUrl;updateSheetsBadge();
+}
+async function testSheets(){
+  if(!sheetsUrl)return;
+  try{
+    await fetch(sheetsUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({type:'order',date:today(),num:'TEST-CONN',chan:'Test',qty:0,price:0,total:0,stockAfter:state.stock,notes:'Connection test — ignore this row'})});
+    addSheetsLog('Test','Connection test','ok');showToast('✓ Sheets connection verified');
+  }catch(e){addSheetsLog('Test','Failed: '+e.message,'err');showToast('Sheets test failed — check URL','err');}
+}
+async function syncToSheets(payload){
+  if(!sheetsUrl)return;
+  const summary=payload.type==='order'
+    ?`${payload.num} · ${payload.chan} · ${payload.qty}× · ${fmt(payload.total)}`
+    :`${payload.store} · ${payload.event} · ${payload.qty}×`;
+  try{
+    await fetch(sheetsUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    addSheetsLog(payload.type==='order'?'Order':'Consignment',summary,'ok');
+  }catch(e){addSheetsLog(payload.type==='order'?'Order':'Consignment','Failed: '+e.message,'err');}
+}
+function addSheetsLog(type,summary,status){
+  sheetsLog.unshift({time:new Date().toLocaleTimeString(),type,summary,status});
+  if(sheetsLog.length>50)sheetsLog.pop();
+  renderSheetsLog();
+}
+function renderSheetsLog(){
+  const b=$('sheets-log-body');
+  if(!sheetsLog.length){b.innerHTML='<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px;">No sync events yet.</td></tr>';return;}
+  b.innerHTML=sheetsLog.map(l=>`<tr><td>${l.time}</td><td>${l.type}</td><td style="color:var(--text2);">${l.summary}</td><td><span class="log-status ${l.status}"></span>${l.status==='ok'?'Sent':'Failed'}</td></tr>`).join('');
+}
+function copyGasCode(){
+  navigator.clipboard.writeText($('gas-code').textContent).then(()=>showToast('✓ Code copied!'));
+}
+
+// FIREBASE
+async function saveState(){
+  const json=JSON.stringify(state);if(json===lastSavedHash)return;
+  setSyncState('syncing','<b>Firebase</b> · saving…');
+  try{
+    if(!fbReady)throw new Error('not ready');
+    await window._fbSave(json);lastSavedHash=json;
+    setSyncState('ok','<b>Firebase</b> · saved · live sync on');
+    const ind=$('save-ind');ind.classList.add('show');setTimeout(()=>ind.classList.remove('show'),2000);
+  }catch(e){setSyncState('error','<b>Firebase</b> · save failed');console.error(e);}
+}
+async function loadState(){
+  setSyncState('syncing','<b>Firebase</b> · loading…');
+  try{
+    if(!fbReady)throw new Error('not ready');
+    const json=await window._fbLoad();
+    if(json){
+      const loaded=JSON.parse(json);
+      state={stock:120,sold:0,revenue:0,chStats:{},hist:[],stores:[],ledger:[],doneIds:[],...loaded};
+      if(!state.doneIds)state.doneIds=[];lastSavedHash=json;
     }
-    if (!states[bookId].doneIds) states[bookId].doneIds = [];
-    lastSavedHashes[bookId] = JSON.stringify(states[bookId]);
-    // Watch for live updates
-    window._fbWatch(bookId, json2 => {
-      if (json2 === lastSavedHashes[bookId]) return;
-      const loaded = JSON.parse(json2);
-      states[bookId] = { ...defaultState(book), ...loaded };
-      if (!states[bookId].doneIds) states[bookId].doneIds = [];
-      lastSavedHashes[bookId] = json2;
-      if (activeBook === bookId || activeBook === 'all') renderCurrent();
-      showToast('↺ '+book.title+' updated from Firebase');
+    setSyncState('ok','<b>Firebase</b> · connected · live sync on');
+    $('hdr-sub').textContent='Publisher OS · Synced '+new Date().toLocaleTimeString();
+    window._fbWatch(json2=>{
+      if(json2===lastSavedHash)return;
+      const loaded=JSON.parse(json2);
+      state={stock:120,sold:0,revenue:0,chStats:{},hist:[],stores:[],ledger:[],doneIds:[],...loaded};
+      if(!state.doneIds)state.doneIds=[];lastSavedHash=json2;
+      renderAll();showToast('↺ Updated from Firebase');
+      $('hdr-sub').textContent='Publisher OS · Synced '+new Date().toLocaleTimeString();
     });
-  } catch(e) {
-    states[bookId] = defaultState(BOOKS[bookId]);
-    setSyncState('error','<b>Firebase</b> · connection failed');
+  }catch(e){setSyncState('error','<b>Firebase</b> · connection failed');console.error(e);}
+  renderAll();
+}
+async function forceSync(){setSyncState('syncing','<b>Firebase</b> · refreshing…');await loadState();}
+
+function boot(){
+  if(sheetsUrl)showSheetsConnected();
+  updateSheetsBadge();
+  if(window._fbReady){fbReady=true;loadState();}
+  else{
+    document.addEventListener('firebase-ready',()=>{fbReady=true;loadState();});
+    setTimeout(()=>{if(!fbReady){setSyncState('error','<b>Firebase</b> · not connected');renderAll();}},4000);
   }
 }
 
-async function loadAllBooks() {
-  setSyncState('syncing','<b>Firebase</b> · loading all books…');
-  await Promise.all(Object.keys(BOOKS).map(id => loadBook(id)));
-  setSyncState('ok','<b>Firebase</b> · connected · live sync on');
-  $('hdr-sub').textContent = 'Publisher OS · Synced '+new Date().toLocaleTimeString();
-  renderCurrent();
+// TABS
+function switchTab(name){
+  const names=['dashboard','website','manual','consignment','history','sheets'];
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',names[i]===name));
+  names.forEach(n=>{const p=$('tab-'+n);if(p)p.classList.toggle('active',n===name);});
+  if(name==='dashboard')updateDash();
+  if(name==='consignment'){renderStores();renderLedger();}
+  if(name==='sheets')renderSheetsLog();
 }
+function openM(id){$('m-'+id).style.display='flex';const d=id==='send-books'?'send-date':id==='record-sale'?'sale-date':'ret-date';if($(d))$(d).value=today();}
+function closeM(id){$('m-'+id).style.display='none';}
+function addLog(lid,msg,type=''){const el=$(lid);el.style.display='block';const s=document.createElement('span');s.className='log-line '+type;s.textContent=new Date().toLocaleTimeString()+' · '+msg;el.appendChild(s);el.scrollTop=el.scrollHeight;}
 
-async function forceSync() {
-  if (IS_AUTHOR_MODE && activeBook) { await loadBook(activeBook); renderCurrent(); }
-  else await loadAllBooks();
-}
-
-// ── BOOK SWITCHER (build tabs)
-function buildBookSwitcher() {
-  const switcher = $('book-switcher');
-  Object.values(BOOKS).forEach(book => {
-    const btn = document.createElement('button');
-    btn.className = 'book-tab';
-    btn.id = 'btab-'+book.id;
-    btn.innerHTML = `<span class="book-dot" style="background:${book.accent}"></span>${book.title}`;
-    btn.onclick = () => switchBook(book.id);
-    switcher.appendChild(btn);
-  });
-}
-
-function switchBook(bookId) {
-  activeBook = bookId;
-  // Update switcher UI
-  document.querySelectorAll('.book-tab').forEach(b => b.classList.remove('active'));
-  const btn = $(bookId === 'all' ? 'btab-all' : 'btab-'+bookId);
-  if (btn) btn.classList.add('active');
-
-  if (bookId === 'all') {
-    // Show combined overview, hide per-book tabs
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    $('tab-all-overview').classList.add('active');
-    $('tab-bar').style.display = 'none';
-    updateAllOverview();
-    updateHeader();
-  } else {
-    $('tab-bar').style.display = '';
-    const book = BOOKS[bookId];
-    // Set CSS accent
-    document.documentElement.style.setProperty('--book-accent', book.accent);
-    document.documentElement.style.setProperty('--book-accent-bg', book.accentBg);
-    switchTab('dashboard');
-    updateHeader();
-  }
-}
-
-// ── TABS
-function switchTab(name) {
-  const names = ['dashboard','website','manual','consignment','history','sheets'];
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', names[i]===name));
-  names.forEach(n => {
-    const p = $('tab-'+n);
-    if(p) { p.classList.remove('active'); p.style.display='none'; }
-  });
-  $('tab-all-overview').classList.remove('active');
-  $('tab-all-overview').style.display='none';
-  const panel = $('tab-'+name);
-  if(panel){ panel.style.display='block'; panel.classList.add('active'); }
-  if(name==='dashboard') updateDash();
-  if(name==='consignment'){ renderStores(); renderLedger(); }
-  if(name==='sheets') renderSheetsLog();
-}
-
-function updateHeader() {
-  if (activeBook === 'all') {
-    // Sum all books
-    const totalStock = Object.values(states).reduce((a,s)=>a+(s.stock||0),0);
-    const totalRev = Object.values(states).reduce((a,s)=>a+(s.revenue||0),0);
-    const totalCon = Object.values(states).reduce((a,s)=>a+s.stores.reduce((b,st)=>b+st.outstanding,0),0);
-    $('h-stock').textContent = totalStock;
-    $('h-revenue').textContent = '~'+totalRev.toFixed(0);
-    $('h-consigned').textContent = totalCon;
-  } else {
-    const s = getState(), book = getBook();
-    const cur = book.currency;
-    $('h-stock').textContent = s.stock;
-    $('h-revenue').textContent = fmt(s.revenue, cur);
-    $('h-consigned').textContent = s.stores.reduce((a,st)=>a+st.outstanding,0);
-  }
-}
-
-// ── ALL BOOKS OVERVIEW
-function updateAllOverview() {
-  // Book strips
-  const list = $('all-books-list');
-  list.innerHTML = Object.values(BOOKS).map(book => {
-    const s = states[book.id] || defaultState(book);
-    const consigned = s.stores.reduce((a,st)=>a+st.outstanding,0);
-    const owed = s.stores.reduce((a,st)=>a+st.amountOwed,0);
-    const pct = Math.max(0,s.stock/book.maxPrint*100);
-    const stockClass = s.stock<=book.threshold?'danger':s.stock<=book.threshold*2?'warn':'gold';
-    return `<div class="book-strip">
-      <div class="book-strip-accent" style="background:${book.accent}"></div>
-      <div class="book-strip-info">
-        <div class="book-strip-title">${book.title}</div>
-        <div class="book-strip-meta">${book.author||'—'} &nbsp;·&nbsp; ${book.currency}${book.listPrice} &nbsp;·&nbsp; ${book.maxPrint} printed</div>
-        <div style="margin-top:8px;"><div class="bar-track" style="background:rgba(0,0,0,.08);margin-bottom:0;"><div class="bar-fill" style="width:${pct}%;background:${book.accent};"></div></div></div>
-      </div>
-      <div class="book-strip-kpis">
-        <div class="bsk"><div class="bsk-val ${stockClass}">${s.stock}</div><div class="bsk-label">On hand</div></div>
-        <div class="bsk"><div class="bsk-val">${s.sold}</div><div class="bsk-label">Sold</div></div>
-        <div class="bsk"><div class="bsk-val">${consigned}</div><div class="bsk-label">Consigned</div></div>
-        <div class="bsk"><div class="bsk-val">${owed>0?fmt(owed,book.currency):'—'}</div><div class="bsk-label">Owed</div></div>
-      </div>
-      <div class="book-strip-actions">
-        <button class="btn sm gold" onclick="switchBook('${book.id}')">Manage →</button>
-      </div>
-    </div>`;
-  }).join('');
-
-  // Combined channel table
-  const rows = [];
-  Object.values(BOOKS).forEach(book => {
-    const s = states[book.id] || defaultState(book);
-    Object.entries(s.chStats||{}).forEach(([chan,cs]) => {
-      rows.push(`<tr><td style="font-weight:600;">${book.title}</td><td>${chan}</td><td class="r">${cs.txns}</td><td class="r">${cs.units}</td><td class="r">${fmt(cs.revenue,book.currency)}</td></tr>`);
-    });
-  });
-  $('all-ch-body').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="5"><div class="empty-state" style="padding:1rem;">No sales yet.</div></td></tr>';
-
-  // Combined consignment table
-  const conRows = [];
-  Object.values(BOOKS).forEach(book => {
-    const s = states[book.id] || defaultState(book);
-    s.stores.forEach(st => {
-      conRows.push(`<tr><td style="font-weight:600;">${book.title}</td><td>${st.name}</td><td class="r">${st.sent}</td><td class="r">${st.sold}</td><td class="r">${st.outstanding}</td><td>${st.outstanding>0?'<span class="pill amber">Active</span>':'<span class="pill gray">Settled</span>'}</td></tr>`);
-    });
-  });
-  $('all-con-body').innerHTML = conRows.length ? conRows.join('') : '<tr><td colspan="6"><div class="empty-state" style="padding:1rem;">No consignment accounts.</div></td></tr>';
-}
-
-// ── BOOK CONTEXT BANNERS
-function updateContextBanners() {
-  if (!activeBook || activeBook === 'all') return;
-  const book = getBook();
-  ['dash','web','man','con','hist'].forEach(sfx => {
-    const t = $('bc-title-'+sfx);
-    if(t) t.textContent = book.title;
-  });
-}
-
-// ── DASHBOARD (per book)
-function updateDash() {
-  if (!activeBook || activeBook === 'all') return;
-  const s = getState(), book = getBook();
-  const cur = book.currency;
-  updateContextBanners();
-  $('d-book-title').textContent = book.title;
-  $('d-book-author').textContent = (book.author||'—') + ' · List price '+cur+book.listPrice;
-  $('d-book-isbn').textContent = book.isbn || '—';
-  $('d-stock-sub').textContent = 'of '+book.maxPrint+' printed';
-  $('d-thresh-sub').textContent = 'threshold: '+book.threshold+' units';
-  $('d-thresh-label').textContent = 'Alert at '+book.threshold+' units';
-  $('d-stock').textContent=s.stock; $('h-stock').textContent=s.stock;
-  $('d-sold').textContent=s.sold;
-  $('d-revenue').textContent=fmt(s.revenue,cur); $('h-revenue').textContent=fmt(s.revenue,cur);
-  $('d-avg-sub').textContent='avg '+(s.sold>0?fmt(s.revenue/s.sold,cur):'—');
-  const consigned=s.stores.reduce((a,st)=>a+st.outstanding,0);
-  $('d-consigned').textContent=consigned; $('h-consigned').textContent=consigned;
-  $('d-stores').textContent=s.stores.length;
-  const owed=s.stores.reduce((a,st)=>a+st.amountOwed,0);
-  $('d-owed').textContent=fmt(owed,cur); $('d-owed').className='kpi-value'+(owed>0?' warn':'');
-  $('d-low').textContent=s.stock<=book.threshold?'⚠ Low':'OK';
-  $('d-low').className='kpi-value'+(s.stock<=book.threshold?' danger':'');
-  const pct=Math.max(0,s.stock/book.maxPrint*100);
+// DASHBOARD
+function updateDash(){
+  $('d-stock').textContent=state.stock;$('h-stock').textContent=state.stock;
+  $('d-sold').textContent=state.sold;
+  $('d-revenue').textContent=fmt(state.revenue);$('h-revenue').textContent=fmt(state.revenue);
+  $('d-avg-sub').textContent='avg '+(state.sold>0?fmt(state.revenue/state.sold):'—');
+  const consigned=state.stores.reduce((a,s)=>a+s.outstanding,0);
+  $('d-consigned').textContent=consigned;$('h-consigned').textContent=consigned;
+  $('d-stores').textContent=state.stores.length;
+  const owed=state.stores.reduce((a,s)=>a+s.amountOwed,0);
+  $('d-owed').textContent=fmt(owed);$('d-owed').className='kpi-value'+(owed>0?' warn':'');
+  $('d-low').textContent=state.stock<=THRESH?'⚠ Low':'OK';
+  $('d-low').className='kpi-value'+(state.stock<=THRESH?' danger':'');
+  const pct=Math.max(0,state.stock/MAX*100);
   $('d-bar').style.width=pct+'%';
-  $('d-bar').style.background=s.stock<=book.threshold?'#f87171':s.stock<=book.threshold*2?'#fb923c':book.accent;
-  $('d-bar-label').textContent=s.stock+' / '+book.maxPrint+' units on hand';
+  $('d-bar').style.background=state.stock<=THRESH?'#f87171':state.stock<=THRESH*2?'#fb923c':'var(--gold2)';
+  $('d-bar-label').textContent=state.stock+' / '+MAX+' units on hand';
   const al=$('d-alert');
-  if(s.stock<=book.threshold){al.className='stock-alert danger';al.textContent='⚠ Below threshold ('+book.threshold+') — reorder now.';}
-  else if(s.stock<=book.threshold*2){al.className='stock-alert warn';al.textContent='Getting low — '+s.stock+' units remaining.';}
+  if(state.stock<=THRESH){al.className='stock-alert danger';al.textContent='⚠ Below threshold ('+THRESH+') — reorder now.';}
+  else if(state.stock<=THRESH*2){al.className='stock-alert warn';al.textContent='Getting low — '+state.stock+' units remaining.';}
   else{al.className='stock-alert ok';al.textContent='Stock is healthy.';}
-  const ckeys=Object.keys(s.chStats||{});
-  $('ch-body').innerHTML=ckeys.length?ckeys.map(k=>{const cs=s.chStats[k];return`<tr><td style="font-weight:600;">${k}</td><td class="r">${cs.txns}</td><td class="r">${cs.units}</td><td class="r">${fmt(cs.revenue,cur)}</td></tr>`;}).join(''):'<tr><td colspan="4"><div class="empty-state" style="padding:1rem;">No sales yet.</div></td></tr>';
-  $('dash-con-body').innerHTML=s.stores.length?s.stores.map(st=>`<tr><td style="font-weight:600;">${st.name}</td><td class="r">${st.sent}</td><td class="r">${st.sold}</td><td class="r">${st.returned}</td><td class="r">${st.outstanding}</td><td>${st.outstanding>0?'<span class="pill amber">Active</span>':'<span class="pill gray">Settled</span>'}</td></tr>`).join(''):'<tr><td colspan="6"><div class="empty-state" style="padding:1rem;">No consignment accounts.</div></td></tr>';
-  // Show danger zone only for publisher
-  if (!IS_AUTHOR_MODE) {
-    $('danger-zone-sect').style.display='';
-    $('danger-zone-block').style.display='flex';
-  }
+  const ckeys=Object.keys(state.chStats);
+  $('ch-body').innerHTML=ckeys.length?ckeys.map(k=>{const s=state.chStats[k];return`<tr><td style="font-weight:600;">${k}</td><td class="r">${s.txns}</td><td class="r">${s.units}</td><td class="r">${fmt(s.revenue)}</td></tr>`;}).join(''):'<tr><td colspan="4"><div class="empty-state" style="padding:1rem;">No sales yet.</div></td></tr>';
+  $('dash-con-body').innerHTML=state.stores.length?state.stores.map(s=>`<tr><td style="font-weight:600;">${s.name}</td><td class="r">${s.sent}</td><td class="r">${s.sold}</td><td class="r">${s.returned}</td><td class="r">${s.outstanding}</td><td>${s.outstanding>0?'<span class="pill amber">Active</span>':'<span class="pill gray">Settled</span>'}</td></tr>`).join(''):'<tr><td colspan="6"><div class="empty-state" style="padding:1rem;">No consignment accounts.</div></td></tr>';
+}
+function renderAll(){updateDash();renderStores();renderLedger();renderHist();}
+
+// ORDER RECORDING
+function recordOrder(num,chan,qty,price,notes){
+  state.stock=Math.max(0,state.stock-qty);state.sold+=qty;state.revenue+=qty*price;
+  if(!state.chStats[chan])state.chStats[chan]={txns:0,units:0,revenue:0};
+  state.chStats[chan].txns++;state.chStats[chan].units+=qty;state.chStats[chan].revenue+=qty*price;
+  state.hist.unshift({num,chan,qty,price,after:state.stock,notes:notes||'',date:today()});
+  renderHist();updateDash();saveState();
+  syncToSheets({type:'order',date:today(),num,chan,qty,price,total:qty*price,stockAfter:state.stock,notes:notes||''});
+}
+function renderHist(){
+  $('hist-body').innerHTML=state.hist.length
+    ?state.hist.map(h=>`<tr><td class="mono">${h.num}</td><td>${h.chan}</td><td class="r">-${h.qty}</td><td class="r">${fmt(h.price)}</td><td class="r" style="font-weight:600;">${fmt(h.qty*h.price)}</td><td class="r">${h.after}</td><td style="font-size:12px;color:var(--text3);">${h.notes}</td><td style="font-size:12px;color:var(--text3);">${fmtD(h.date)}</td></tr>`).join('')
+    :'<tr><td colspan="8"><div class="empty-state" style="padding:1.5rem;">No orders yet.</div></td></tr>';
 }
 
-function renderAll() {
-  if (activeBook === 'all') { updateAllOverview(); updateHeader(); return; }
-  updateDash(); renderStores(); renderLedger(); renderHist();
+// WEBSITE
+function renderOrders(){
+  const list=$('orders-list'),rel=orders.filter(o=>o.hasBook);
+  if(!rel.length){list.innerHTML='<div class="empty-state"><div class="e-icon">📬</div>No Un Fantastico Altrove orders found.</div>';$('apply-all-btn').disabled=true;return;}
+  const doneSet=new Set(state.doneIds);
+  list.innerHTML=rel.map(o=>{const done=doneSet.has(o.id);return`<div class="order-card${done?' done':''}"><div class="order-row"><div><div class="order-num">${o.orderNum}</div><div class="order-meta">${o.date} · ${o.customer}</div></div><span class="pill ${done?'gray':'gold'}">${done?'Applied':'New'}</span></div><div class="order-row" style="margin-top:8px;"><span style="font-size:12px;color:var(--text3);">Un Fantastico Altrove × ${o.qty} · ${fmt(o.price||LIST)}</span>${!done?`<button class="btn sm gold" onclick="applyOne('${o.id}')">Apply</button>`:'<span style="font-size:11px;color:var(--text3);">Done</span>'}</div></div>`;}).join('');
+  $('apply-all-btn').disabled=!rel.some(o=>!new Set(state.doneIds).has(o.id));
 }
-
-function renderCurrent() {
-  if (activeBook === 'all') { updateAllOverview(); updateHeader(); }
-  else renderAll();
+function applyOne(id){
+  const o=orders.find(x=>x.id===id);if(!o||new Set(state.doneIds).has(id))return;
+  recordOrder(o.orderNum,'Website',o.qty,o.price||LIST,'Big Cartel');
+  state.doneIds.push(id);
+  addLog('log-web',`${o.orderNum}: -${o.qty} → ${state.stock} remaining`,'ok');
+  if(state.stock<=THRESH)addLog('log-web','⚠ Below threshold!','warn');
+  renderOrders();saveState();
 }
-
-// ── ORDER RECORDING
-function recordOrder(num, chan, qty, price, notes) {
-  const s = getState(), book = getBook();
-  s.stock = Math.max(0, s.stock - qty);
-  s.sold += qty; s.revenue += qty * price;
-  if (!s.chStats[chan]) s.chStats[chan]={txns:0,units:0,revenue:0};
-  s.chStats[chan].txns++; s.chStats[chan].units+=qty; s.chStats[chan].revenue+=qty*price;
-  s.hist.unshift({num,chan,qty,price,after:s.stock,notes:notes||'',date:today()});
-  renderHist(); updateDash(); saveState(activeBook);
-  syncToSheets({type:'order',book:book.title,date:today(),num,chan,qty,price,total:qty*price,stockAfter:s.stock,notes:notes||''});
-}
-
-function renderHist() {
-  const s = getState(), book = getBook(), cur = book.currency;
-  $('hist-body').innerHTML = s.hist.length
-    ? s.hist.map((h,i)=>{
-        const voided = h.voided ? ' voided' : '';
-        const voidPill = h.voided ? '<span class="void-badge">Void</span>' : '';
-        const editBtn = IS_AUTHOR_MODE ? '' : `<button class="edit-btn" onclick="openEditHist(${i})" title="Edit entry">✎</button>`;
-        return `<tr class="${voided}"><td class="mono">${h.num}${editBtn}</td><td>${h.chan}</td><td class="r">${h.voided?'':'-'}${h.qty}</td><td class="r">${fmt(h.price,cur)}</td><td class="r" style="font-weight:600;">${fmt(h.qty*h.price,cur)}</td><td class="r">${h.after}</td><td style="font-size:12px;color:var(--text3);">${h.notes||'—'}</td><td style="font-size:12px;color:var(--text3);">${fmtD(h.date)} ${voidPill}</td></tr>`;
-      }).join('')
-    : '<tr><td colspan="8"><div class="empty-state" style="padding:1.5rem;">No orders yet.</div></td></tr>';
-}
-
-// ── WEBSITE ORDERS
-function renderOrders() {
-  const s = getState(), book = getBook(), cur = book.currency;
-  const list=$('orders-list'), rel=orders.filter(o=>o.hasBook);
-  if(!rel.length){list.innerHTML='<div class="empty-state"><div class="e-icon">📬</div>No orders found.</div>';$('apply-all-btn').disabled=true;return;}
-  const doneSet=new Set(s.doneIds);
-  list.innerHTML=rel.map(o=>{const done=doneSet.has(o.id);return`<div class="order-card${done?' done':''}"><div class="order-row"><div><div class="order-num">${o.orderNum}</div><div class="order-meta">${o.date} · ${o.customer}</div></div><span class="pill ${done?'gray':'gold'}">${done?'Applied':'New'}</span></div><div class="order-row" style="margin-top:8px;"><span style="font-size:12px;color:var(--text3);">${book.title} × ${o.qty} · ${fmt(o.price||book.listPrice,cur)}</span>${!done?`<button class="btn sm gold" onclick="applyOne('${o.id}')">Apply</button>`:'<span style="font-size:11px;color:var(--text3);">Done</span>'}</div></div>`;}).join('');
-  $('apply-all-btn').disabled=!rel.some(o=>!new Set(s.doneIds).has(o.id));
-}
-
-function applyOne(id) {
-  const s=getState(), book=getBook(), o=orders.find(x=>x.id===id);
-  if(!o||new Set(s.doneIds).has(id))return;
-  recordOrder(o.orderNum,'Website',o.qty,o.price||book.listPrice,'Big Cartel');
-  s.doneIds.push(id);
-  addLog('log-web',`${o.orderNum}: -${o.qty} → ${s.stock} remaining`,'ok');
-  if(s.stock<=book.threshold)addLog('log-web','⚠ Below threshold!','warn');
-  renderOrders(); saveState(activeBook);
-}
-function applyAll(){orders.filter(o=>o.hasBook&&!new Set(getState().doneIds).has(o.id)).forEach(o=>applyOne(o.id));}
-
+function applyAll(){orders.filter(o=>o.hasBook&&!new Set(state.doneIds).has(o.id)).forEach(o=>applyOne(o.id));}
 async function fetchOrders(){
-  const book=getBook();
   const btn=$('scan-btn');btn.innerHTML='<span class="spinner"></span>Scanning…';btn.disabled=true;
   try{
-    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-      model:"claude-sonnet-4-20250514",max_tokens:1000,
-      system:`Search Gmail for Big Cartel orders for Lyricalmyrical Books for the book "${book.title}". Respond ONLY valid JSON: {"orders":[{"id":"msg_id","orderNum":"#ORDER","date":"Mon DD, YYYY","customer":"Name","qty":1,"price":${book.listPrice},"hasBook":true}]}`,
-      messages:[{role:"user",content:`Search Gmail for recent Big Cartel orders for "${book.title}" from Lyricalmyrical Books.`}],
-      mcp_servers:[{type:"url",url:"https://gmail.mcp.claude.com/mcp",name:"gmail"}]
-    })});
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:`Search Gmail for Big Cartel orders for Lyricalmyrical Books with "Un Fantastico Altrove". Respond ONLY valid JSON: {"orders":[{"id":"msg_id","orderNum":"#ORDER","date":"Mon DD, YYYY","customer":"Name","qty":1,"price":40.00,"hasBook":true}]}`,messages:[{role:"user",content:"Search Gmail for recent Big Cartel orders for Un Fantastico Altrove from Lyricalmyrical Books."}],mcp_servers:[{type:"url",url:"https://gmail.mcp.claude.com/mcp",name:"gmail"}]})});
     const d=await r.json();
     const text=d.content.filter(c=>c.type==='text').map(c=>c.text).join('');
     const m=text.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
     const p=m?JSON.parse(m[0]):{orders:[]};
-    orders=(p.orders||[]).map(o=>({...o,hasBook:true,price:o.price||book.listPrice}));
-    if(!orders.length)orders=[{id:"demo-"+Date.now(),orderNum:"#DEMO-001",date:"Mar 14, 2026",customer:"Demo Customer",qty:1,price:book.listPrice,hasBook:true}];
+    orders=(p.orders||[]).map(o=>({...o,hasBook:true,price:o.price||LIST}));
+    if(!orders.length)orders=[{id:"19cea15fddbb704c",orderNum:"#EMFT-084726",date:"Nov 16, 2025",customer:"Francesca Chila",qty:1,price:40,hasBook:true}];
     addLog('log-web',`Found ${orders.length} order(s)`,'ok');renderOrders();
   }catch(e){
-    orders=[{id:"demo-"+Date.now(),orderNum:"#DEMO-001",date:"Mar 14, 2026",customer:"Demo Customer",qty:1,price:book.listPrice,hasBook:true}];
-    addLog('log-web','Loaded demo data','warn');renderOrders();
+    orders=[{id:"19cea15fddbb704c",orderNum:"#EMFT-084726",date:"Nov 16, 2025",customer:"Francesca Chila",qty:1,price:40,hasBook:true}];
+    addLog('log-web','Loaded from cache','warn');renderOrders();
   }
   btn.textContent='Scan Gmail';btn.disabled=false;
 }
 
-// ── MANUAL
-function phint(){
-  const book=getBook(),p=parseFloat($('m-price').value)||0,q=parseInt($('m-qty').value)||1,h=$('m-hint'),t=p*q;
-  $('m-sym').textContent=book.currency;
-  if(p<book.listPrice){h.className='hint-text amber';h.textContent=`Discounted from ${book.currency}${book.listPrice} — total ${fmt(t,book.currency)}`;}
-  else{h.className='hint-text';h.textContent=q>1?`Total ${fmt(t,book.currency)}`:'';};
-}
+// MANUAL
+function phint(){const p=parseFloat($('m-price').value)||0,q=parseInt($('m-qty').value)||1,h=$('m-hint'),t=p*q;if(p<LIST){h.className='hint-text amber';h.textContent=`Discounted from €${LIST.toFixed(2)} — total ${fmt(t)}`;}else{h.className='hint-text';h.textContent=q>1?`Total ${fmt(t)}`:'';};}
 function submitManual(){
-  const book=getBook(),qty=parseInt($('m-qty').value)||1,price=parseFloat($('m-price').value)||book.listPrice;
-  const num=$('m-num').value.trim()||'MAN-'+Date.now(),chan=$('m-chan').value,notes=$('m-notes').value.trim();
+  const qty=parseInt($('m-qty').value)||1,price=parseFloat($('m-price').value)||LIST;
+  const num=$('m-num').value.trim()||'MAN-'+Date.now();
+  const chan=$('m-chan').value,notes=$('m-notes').value.trim();
   recordOrder(num,chan,qty,price,notes);
-  addLog('log-manual',`${num}: -${qty} @ ${fmt(price,book.currency)} → ${getState().stock} remaining`,'ok');
-  if(getState().stock<=book.threshold)addLog('log-manual','⚠ Below threshold!','warn');
-  $('m-num').value='';$('m-qty').value='1';$('m-price').value=book.listPrice.toFixed(2);$('m-notes').value='';$('m-hint').textContent='';
+  addLog('log-manual',`${num}: -${qty} @ ${fmt(price)} → ${state.stock} remaining`,'ok');
+  if(state.stock<=THRESH)addLog('log-manual','⚠ Below threshold!','warn');
+  $('m-num').value='';$('m-qty').value='1';$('m-price').value=LIST.toFixed(2);$('m-notes').value='';$('m-hint').textContent='';
   showToast('✓ Order saved · syncing to Sheets…');
 }
 
-// ── CONSIGNMENT
-function storeById(id){return getState().stores.find(s=>s.id===id);}
+// CONSIGNMENT
+function storeById(id){return state.stores.find(s=>s.id===id);}
 function addStore(){
   const name=$('ns-name').value.trim();if(!name)return;
-  getState().stores.push({id:Date.now(),name,contact:$('ns-contact').value.trim(),email:$('ns-email').value.trim(),city:$('ns-city').value.trim(),rate:parseFloat($('ns-rate').value)||40,terms:$('ns-terms').value,notes:$('ns-notes').value.trim(),sent:0,sold:0,returned:0,outstanding:0,amountOwed:0});
-  closeM('add-store');['ns-name','ns-contact','ns-email','ns-city','ns-notes'].forEach(id=>$(id).value='');$('ns-rate').value='40';renderStores();updateDash();saveState(activeBook);showToast('✓ Store added');
+  state.stores.push({id:Date.now(),name,contact:$('ns-contact').value.trim(),email:$('ns-email').value.trim(),city:$('ns-city').value.trim(),rate:parseFloat($('ns-rate').value)||40,terms:$('ns-terms').value,notes:$('ns-notes').value.trim(),sent:0,sold:0,returned:0,outstanding:0,amountOwed:0});
+  closeM('add-store');['ns-name','ns-contact','ns-email','ns-city','ns-notes'].forEach(id=>$(id).value='');$('ns-rate').value='40';renderStores();updateDash();saveState();showToast('✓ Store added');
 }
 function renderStores(){
-  const s=getState(),el=$('stores-list'),book=getBook(),cur=book.currency;
-  if(!s.stores.length){el.innerHTML='<div class="empty-state"><div class="e-icon">🏪</div>No stores yet. Add your first consignment account.</div>';return;}
-  el.innerHTML=s.stores.map(st=>{
-    const sp=st.outstanding===0&&st.sent>0?'<span class="pill gray">Settled</span>':st.amountOwed>0?'<span class="pill amber">Payment due</span>':'<span class="pill green">Active</span>';
-    return`<div class="store-card"><div class="store-head"><div><div class="store-name">${st.name}</div><div class="store-meta">${[st.city,st.contact,st.email].filter(Boolean).join(' · ')} · ${st.rate}% commission · ${st.terms}</div></div>${sp}</div><div class="store-kpis"><div class="sk"><div class="sk-l">Sent</div><div class="sk-v">${st.sent}</div></div><div class="sk"><div class="sk-l">Sold</div><div class="sk-v">${st.sold}</div></div><div class="sk"><div class="sk-l">Outstanding</div><div class="sk-v ${st.outstanding>0?'warn':''}">${st.outstanding}</div></div><div class="sk"><div class="sk-l">Owed</div><div class="sk-v ${st.amountOwed>0?'warn':''}">${st.amountOwed>0?fmt(st.amountOwed,cur):'—'}</div></div></div><div class="store-actions"><button class="btn sm gold" onclick="openSend(${st.id})">Send books</button><button class="btn sm ink" onclick="openSale(${st.id})" ${!st.outstanding?'disabled':''}>Record sale</button><button class="btn sm" onclick="openRet(${st.id})" ${!st.outstanding?'disabled':''}>Return</button><button class="btn sm danger-btn" onclick="removeStore(${st.id})">Remove</button></div></div>`;
+  const el=$('stores-list');
+  if(!state.stores.length){el.innerHTML='<div class="empty-state"><div class="e-icon">🏪</div>No stores yet. Add your first consignment account.</div>';return;}
+  el.innerHTML=state.stores.map(s=>{
+    const sp=s.outstanding===0&&s.sent>0?'<span class="pill gray">Settled</span>':s.amountOwed>0?'<span class="pill amber">Payment due</span>':'<span class="pill green">Active</span>';
+    return`<div class="store-card"><div class="store-head"><div><div class="store-name">${s.name}</div><div class="store-meta">${[s.city,s.contact,s.email].filter(Boolean).join(' · ')} · ${s.rate}% commission · ${s.terms}</div></div>${sp}</div><div class="store-kpis"><div class="sk"><div class="sk-l">Sent</div><div class="sk-v">${s.sent}</div></div><div class="sk"><div class="sk-l">Sold</div><div class="sk-v">${s.sold}</div></div><div class="sk"><div class="sk-l">Outstanding</div><div class="sk-v ${s.outstanding>0?'warn':''}">${s.outstanding}</div></div><div class="sk"><div class="sk-l">Owed</div><div class="sk-v ${s.amountOwed>0?'warn':''}">${s.amountOwed>0?fmt(s.amountOwed):'—'}</div></div></div><div class="store-actions"><button class="btn sm gold" onclick="openSend(${s.id})">Send books</button><button class="btn sm ink" onclick="openSale(${s.id})" ${!s.outstanding?'disabled':''}>Record sale</button><button class="btn sm" onclick="openRet(${s.id})" ${!s.outstanding?'disabled':''}>Return</button><button class="btn sm danger-btn" onclick="removeStore(${s.id})">Remove</button></div></div>`;
   }).join('');
 }
-function removeStore(id){if(!confirm('Remove store?'))return;getState().stores=getState().stores.filter(s=>s.id!==id);renderStores();updateDash();saveState(activeBook);}
-function openSend(id){activeId=id;const st=storeById(id);$('send-sname').textContent=st.name;$('send-rate').value=st.rate;openM('send-books');}
+function removeStore(id){if(!confirm('Remove store?'))return;state.stores=state.stores.filter(s=>s.id!==id);renderStores();updateDash();saveState();}
+function openSend(id){activeId=id;const s=storeById(id);$('send-sname').textContent=s.name;$('send-rate').value=s.rate;openM('send-books');}
 function confirmSend(){
-  const s=getState(),book=getBook(),st=storeById(activeId),qty=parseInt($('send-qty').value)||0,date=$('send-date').value,rate=parseFloat($('send-rate').value)||st.rate,notes=$('send-notes').value.trim();
-  if(qty>s.stock){alert('Not enough stock on hand!');return;}
-  s.stock-=qty;st.sent+=qty;st.outstanding+=qty;
-  s.ledger.push({id:Date.now(),storeId:st.id,storeName:st.name,type:'Shipment',date,qty,rate,amountDue:0,paid:'n/a',notes,status:'sent'});
-  closeM('send-books');renderStores();renderLedger();updateDash();saveState(activeBook);
-  syncToSheets({type:'consignment',book:book.title,date,store:st.name,event:'Shipment',qty,rate,amountDue:0,notes,status:'sent'});
-  showToast(`✓ ${qty} books sent to ${st.name}`);
+  const s=storeById(activeId),qty=parseInt($('send-qty').value)||0,date=$('send-date').value,rate=parseFloat($('send-rate').value)||s.rate,notes=$('send-notes').value.trim();
+  if(qty>state.stock){alert('Not enough stock on hand!');return;}
+  state.stock-=qty;s.sent+=qty;s.outstanding+=qty;
+  state.ledger.push({id:Date.now(),storeId:s.id,storeName:s.name,type:'Shipment',date,qty,rate,amountDue:0,paid:'n/a',notes,status:'sent'});
+  closeM('send-books');renderStores();renderLedger();updateDash();saveState();
+  syncToSheets({type:'consignment',date,store:s.name,event:'Shipment',qty,rate,amountDue:0,notes,status:'sent'});
+  showToast(`✓ ${qty} books sent to ${s.name}`);
 }
-function openSale(id){activeId=id;const book=getBook();$('sale-sym').textContent=book.currency;$('sale-price').value=book.listPrice.toFixed(2);$('sale-sname').textContent=storeById(id).name;openM('record-sale');}
+function openSale(id){activeId=id;$('sale-sname').textContent=storeById(id).name;openM('record-sale');}
 function confirmSale(){
-  const s=getState(),book=getBook(),cur=book.currency,st=storeById(activeId),qty=parseInt($('sale-qty').value)||0,date=$('sale-date').value,price=parseFloat($('sale-price').value)||book.listPrice,paid=$('sale-paid').value,notes=$('sale-notes').value.trim();
-  if(qty>st.outstanding){alert('Qty exceeds outstanding books.');return;}
-  const gross=qty*price,pub=gross*(1-st.rate/100);
-  st.sold+=qty;st.outstanding-=qty;st.amountOwed+=paid==='pending'?pub:0;
-  s.sold+=qty;s.revenue+=pub;
-  if(!s.chStats['Consignment'])s.chStats['Consignment']={txns:0,units:0,revenue:0};
-  s.chStats['Consignment'].txns++;s.chStats['Consignment'].units+=qty;s.chStats['Consignment'].revenue+=pub;
-  const num='CON-'+st.name.replace(/\s+/g,'').slice(0,5).toUpperCase()+'-'+Date.now().toString().slice(-4);
-  s.hist.unshift({num,chan:'Consignment',qty,price:pub/qty,after:s.stock,notes:st.name,date});
-  s.ledger.push({id:Date.now(),storeId:st.id,storeName:st.name,type:'Sale',date,qty,rate:st.rate,amountDue:pub,paid,notes,status:paid});
-  closeM('record-sale');renderStores();renderLedger();renderHist();updateDash();saveState(activeBook);
-  syncToSheets({type:'consignment',book:book.title,date,store:st.name,event:'Sale',qty,rate:st.rate,amountDue:pub,notes,status:paid});
-  showToast(`✓ Sale recorded — ${fmt(pub,cur)} due to you`);
+  const s=storeById(activeId),qty=parseInt($('sale-qty').value)||0,date=$('sale-date').value,price=parseFloat($('sale-price').value)||LIST,paid=$('sale-paid').value,notes=$('sale-notes').value.trim();
+  if(qty>s.outstanding){alert('Qty exceeds outstanding books.');return;}
+  const gross=qty*price,pub=gross*(1-s.rate/100);
+  s.sold+=qty;s.outstanding-=qty;s.amountOwed+=paid==='pending'?pub:0;
+  state.sold+=qty;state.revenue+=pub;
+  if(!state.chStats['Consignment'])state.chStats['Consignment']={txns:0,units:0,revenue:0};
+  state.chStats['Consignment'].txns++;state.chStats['Consignment'].units+=qty;state.chStats['Consignment'].revenue+=pub;
+  const num='CON-'+s.name.replace(/\s+/g,'').slice(0,5).toUpperCase()+'-'+Date.now().toString().slice(-4);
+  state.hist.unshift({num,chan:'Consignment',qty,price:pub/qty,after:state.stock,notes:s.name,date});
+  state.ledger.push({id:Date.now(),storeId:s.id,storeName:s.name,type:'Sale',date,qty,rate:s.rate,amountDue:pub,paid,notes,status:paid});
+  closeM('record-sale');renderStores();renderLedger();renderHist();updateDash();saveState();
+  syncToSheets({type:'consignment',date,store:s.name,event:'Sale',qty,rate:s.rate,amountDue:pub,notes,status:paid});
+  showToast(`✓ Sale recorded — ${fmt(pub)} due to you`);
 }
 function openRet(id){activeId=id;$('ret-sname').textContent=storeById(id).name;openM('return');}
 function confirmReturn(){
-  const s=getState(),book=getBook(),st=storeById(activeId),qty=parseInt($('ret-qty').value)||0,date=$('ret-date').value,cond=$('ret-cond').value,notes=$('ret-notes').value.trim();
-  if(qty>st.outstanding){alert('Qty exceeds outstanding.');return;}
-  st.returned+=qty;st.outstanding-=qty;const good=cond.startsWith('Good');if(good)s.stock+=qty;
-  s.ledger.push({id:Date.now(),storeId:st.id,storeName:st.name,type:'Return',date,qty,rate:st.rate,amountDue:0,paid:'n/a',notes:(notes?notes+' · ':'')+cond,status:good?'restocked':'written off'});
-  closeM('return');renderStores();renderLedger();updateDash();saveState(activeBook);
-  syncToSheets({type:'consignment',book:book.title,date,store:st.name,event:'Return',qty,rate:st.rate,amountDue:0,notes:cond,status:good?'restocked':'written off'});
+  const s=storeById(activeId),qty=parseInt($('ret-qty').value)||0,date=$('ret-date').value,cond=$('ret-cond').value,notes=$('ret-notes').value.trim();
+  if(qty>s.outstanding){alert('Qty exceeds outstanding.');return;}
+  s.returned+=qty;s.outstanding-=qty;const good=cond.startsWith('Good');if(good)state.stock+=qty;
+  state.ledger.push({id:Date.now(),storeId:s.id,storeName:s.name,type:'Return',date,qty,rate:s.rate,amountDue:0,paid:'n/a',notes:(notes?notes+' · ':'')+cond,status:good?'restocked':'written off'});
+  closeM('return');renderStores();renderLedger();updateDash();saveState();
+  syncToSheets({type:'consignment',date,store:s.name,event:'Return',qty,rate:s.rate,amountDue:0,notes:cond,status:good?'restocked':'written off'});
   showToast(good?`✓ ${qty} books returned to stock`:`✓ ${qty} books written off`);
 }
 function markPaid(lid){
-  const s=getState(),book=getBook(),e=s.ledger.find(x=>x.id===lid);if(!e)return;
-  const st=storeById(e.storeId);if(st)st.amountOwed=Math.max(0,st.amountOwed-e.amountDue);
-  e.paid='paid';e.status='paid';renderLedger();renderStores();updateDash();saveState(activeBook);
-  showToast(`✓ Payment of ${fmt(e.amountDue,book.currency)} marked as received`);
+  const e=state.ledger.find(x=>x.id===lid);if(!e)return;
+  const s=storeById(e.storeId);if(s)s.amountOwed=Math.max(0,s.amountOwed-e.amountDue);
+  e.paid='paid';e.status='paid';renderLedger();renderStores();updateDash();saveState();
+  showToast(`✓ Payment of ${fmt(e.amountDue)} marked as received`);
 }
 function renderLedger(){
-  const s=getState(),book=getBook(),cur=book.currency,b=$('ledger-body');
-  if(!s.ledger.length){b.innerHTML='<tr><td colspan="8"><div class="empty-state" style="padding:1rem;">No entries.</div></td></tr>';return;}
+  const b=$('ledger-body');
+  if(!state.ledger.length){b.innerHTML='<tr><td colspan="8"><div class="empty-state" style="padding:1rem;">No entries.</div></td></tr>';return;}
   const pill=e=>{
-    if(e.voided)return'<span class="void-badge">Void</span>';
     if(e.type==='Shipment')return'<span class="pill blue">Sent</span>';
     if(e.status==='paid')return'<span class="pill green">Paid</span>';
     if(e.status==='pending')return'<span class="pill amber">Pending</span>';
@@ -1181,400 +879,36 @@ function renderLedger(){
     if(e.status==='written off')return'<span class="pill red">Written off</span>';
     return`<span class="pill gray">${e.status}</span>`;
   };
-  // Map ledger indices so edit buttons can reference them correctly (ledger is displayed reversed)
-  const indexed = s.ledger.map((e,i)=>({e,i}));
-  b.innerHTML=[...indexed].reverse().map(({e,i})=>{
-    const voided = e.voided?' voided':'';
-    const editBtn = IS_AUTHOR_MODE ? '' : `<button class="edit-btn" onclick="openEditLedger(${i})" title="Edit entry">✎</button>`;
-    return`<tr class="${voided}"><td style="font-size:12px;color:var(--text3);">${fmtD(e.date)}</td><td style="font-weight:600;">${e.storeName}${editBtn}</td><td>${e.type}</td><td class="r">${e.qty}</td><td class="r">${e.type==='Sale'?e.rate+'%':'—'}</td><td class="r" style="font-weight:600;">${e.amountDue>0?fmt(e.amountDue,cur):'—'}</td><td style="font-size:12px;color:var(--text3);">${e.notes||'—'}</td><td>${pill(e)}${e.status==='pending'&&!e.voided?` <button class="btn sm" style="margin-left:6px;" onclick="markPaid(${e.id})">Mark paid</button>`:''}</td></tr>`;
-  }).join('');
+  b.innerHTML=[...state.ledger].reverse().map(e=>`<tr><td style="font-size:12px;color:var(--text3);">${fmtD(e.date)}</td><td style="font-weight:600;">${e.storeName}</td><td>${e.type}</td><td class="r">${e.qty}</td><td class="r">${e.type==='Sale'?e.rate+'%':'—'}</td><td class="r" style="font-weight:600;">${e.amountDue>0?fmt(e.amountDue):'—'}</td><td style="font-size:12px;color:var(--text3);">${e.notes||'—'}</td><td>${pill(e)}${e.status==='pending'?` <button class="btn sm" style="margin-left:6px;" onclick="markPaid(${e.id})">Mark paid</button>`:''}</td></tr>`).join('');
 }
 
-// ── EDIT & VOID SYSTEM ─────────────────────────────────────────────────────
-let editCtx = null; // { kind:'hist'|'ledger', idx, snapshot }
-
-function openEditHist(idx) {
-  const s = getState(), book = getBook(), h = s.hist[idx];
-  if (!h) return;
-  editCtx = { kind:'hist', idx, snapshot: JSON.parse(JSON.stringify(h)) };
-  $('edit-modal-title').textContent = 'Edit order entry';
-  $('edit-modal-type-badge').textContent = h.chan + ' order';
-  $('edit-order-fields').style.display = '';
-  $('edit-ledger-fields').style.display = 'none';
-  $('edit-sym').textContent = book.currency;
-  $('edit-num').value = h.num;
-  $('edit-date').value = h.date;
-  $('edit-qty').value = h.qty;
-  $('edit-price').value = h.price.toFixed(2);
-  $('edit-chan').value = h.chan;
-  $('edit-notes').value = h.notes || '';
-  $('edit-diff-preview').style.display = 'none';
-  const voidZone = $('edit-void-zone');
-  if (h.voided) {
-    $('edit-void-btn').textContent = 'Unvoid this entry';
-    $('edit-void-body').textContent = 'This entry is currently voided. Unvoiding will re-apply its stock and revenue effects.';
+// PASSWORD GATE
+const PW_HASH = '9a99ac2dd7e4e8bd15fa2a07d7b10ea6e47bef9b0f09e5b27a4e6e8498dd1dd1'; // sha256 of "Lyricalmyrical"
+async function sha256(str){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+async function checkPw(){
+  const val=$('pw-input').value;
+  const hash=await sha256(val);
+  if(hash===PW_HASH){
+    sessionStorage.setItem('lm-auth','1');
+    $('pw-gate').style.display='none';
+    $('main-app').style.display='';
+    boot();
   } else {
-    $('edit-void-btn').textContent = 'Void this entry';
-    $('edit-void-body').textContent = 'Voiding reverses all stock and revenue effects. The entry stays visible as struck-through for your records.';
+    const inp=$('pw-input');
+    $('pw-err').textContent='Incorrect password — try again';
+    inp.value='';inp.classList.add('error','shake');
+    setTimeout(()=>inp.classList.remove('shake'),400);
+    setTimeout(()=>{inp.classList.remove('error');$('pw-err').textContent='';},2500);
   }
-  openM('edit-entry');
 }
-
-function openEditLedger(idx) {
-  const s = getState(), book = getBook(), e = s.ledger[idx];
-  if (!e) return;
-  editCtx = { kind:'ledger', idx, snapshot: JSON.parse(JSON.stringify(e)) };
-  $('edit-modal-title').textContent = 'Edit consignment entry';
-  $('edit-modal-type-badge').textContent = e.storeName + ' · ' + e.type;
-  $('edit-order-fields').style.display = 'none';
-  $('edit-ledger-fields').style.display = '';
-  $('edit-l-date').value = e.date;
-  $('edit-l-qty').value = e.qty;
-  $('edit-l-rate').value = e.rate;
-  $('edit-l-notes').value = e.notes || '';
-  if (e.voided) {
-    $('edit-void-btn').textContent = 'Unvoid this entry';
-    $('edit-void-body').textContent = 'This entry is currently voided. Unvoiding will re-apply its effects on consignment stock and payments.';
+function initGate(){
+  if(sessionStorage.getItem('lm-auth')==='1'){
+    $('pw-gate').style.display='none';$('main-app').style.display='';boot();
   } else {
-    $('edit-void-btn').textContent = 'Void this entry';
-    $('edit-void-body').textContent = 'Voiding reverses the qty and payment effects of this entry. It stays visible as struck-through.';
-  }
-  openM('edit-entry');
-}
-
-function saveEntryEdit() {
-  if (!editCtx) return;
-  const s = getState(), book = getBook();
-  if (editCtx.kind === 'hist') {
-    const old = editCtx.snapshot;
-    const h = s.hist[editCtx.idx];
-    const newQty = parseInt($('edit-qty').value) || old.qty;
-    const newPrice = parseFloat($('edit-price').value) || old.price;
-    const newChan = $('edit-chan').value;
-    const newNum = $('edit-num').value.trim() || old.num;
-    const newDate = $('edit-date').value || old.date;
-    const newNotes = $('edit-notes').value.trim();
-
-    if (!h.voided) {
-      // Reverse old effect
-      s.stock += old.qty;
-      s.sold -= old.qty;
-      s.revenue -= old.qty * old.price;
-      if (s.chStats[old.chan]) {
-        s.chStats[old.chan].txns--;
-        s.chStats[old.chan].units -= old.qty;
-        s.chStats[old.chan].revenue -= old.qty * old.price;
-        if (s.chStats[old.chan].txns <= 0) delete s.chStats[old.chan];
-      }
-      // Apply new effect
-      s.stock = Math.max(0, s.stock - newQty);
-      s.sold += newQty;
-      s.revenue += newQty * newPrice;
-      if (!s.chStats[newChan]) s.chStats[newChan] = {txns:0,units:0,revenue:0};
-      s.chStats[newChan].txns++;
-      s.chStats[newChan].units += newQty;
-      s.chStats[newChan].revenue += newQty * newPrice;
-    }
-
-    // Update the record
-    h.num = newNum; h.chan = newChan; h.qty = newQty; h.price = newPrice;
-    h.date = newDate; h.notes = newNotes;
-    // Recalculate "after" for this entry; for simplicity mark it as edited
-    h.edited = true;
-
-  } else {
-    // Ledger entry edit (date, qty, rate, notes — non-destructive for stock, 
-    // since consignment stock effects are complex; just update the displayed values)
-    const e = s.ledger[editCtx.idx];
-    e.date = $('edit-l-date').value || e.date;
-    e.notes = $('edit-l-notes').value.trim();
-    // qty and rate — update display only, reverse/reapply amountDue if sale
-    const newQty = parseInt($('edit-l-qty').value) || e.qty;
-    const newRate = parseFloat($('edit-l-rate').value) || e.rate;
-    if (e.type === 'Sale' && !e.voided) {
-      // Find the store and adjust owed
-      const st = getState().stores.find(st=>st.id===e.storeId);
-      if (st) {
-        const oldDue = e.amountDue;
-        // We need the sale price — estimate from old amountDue
-        const salePrice = oldDue > 0 ? (oldDue / (e.qty * (1 - e.rate/100))) : book.listPrice;
-        const newDue = newQty * salePrice * (1 - newRate/100);
-        if (e.paid === 'pending' && st) {
-          st.amountOwed = Math.max(0, st.amountOwed - oldDue + newDue);
-        }
-        s.revenue = Math.max(0, s.revenue - oldDue + newDue);
-        if (s.chStats['Consignment']) {
-          s.chStats['Consignment'].revenue = Math.max(0, s.chStats['Consignment'].revenue - oldDue + newDue);
-          s.chStats['Consignment'].units += (newQty - e.qty);
-        }
-        st.sold += (newQty - e.qty);
-        e.amountDue = newDue;
-      }
-    }
-    e.qty = newQty;
-    e.rate = newRate;
-    e.edited = true;
-  }
-
-  closeM('edit-entry');
-  renderAll(); updateDash(); saveState(activeBook);
-  showToast('✓ Entry updated');
-}
-
-function voidEntry() {
-  if (!editCtx) return;
-  const s = getState(), book = getBook();
-
-  if (editCtx.kind === 'hist') {
-    const h = s.hist[editCtx.idx];
-    if (!h) return;
-    if (!h.voided) {
-      // VOID: reverse effects
-      s.stock += h.qty;
-      s.sold = Math.max(0, s.sold - h.qty);
-      s.revenue = Math.max(0, s.revenue - h.qty * h.price);
-      if (s.chStats[h.chan]) {
-        s.chStats[h.chan].txns = Math.max(0, s.chStats[h.chan].txns - 1);
-        s.chStats[h.chan].units = Math.max(0, s.chStats[h.chan].units - h.qty);
-        s.chStats[h.chan].revenue = Math.max(0, s.chStats[h.chan].revenue - h.qty * h.price);
-        if (s.chStats[h.chan].txns <= 0) delete s.chStats[h.chan];
-      }
-      h.voided = true;
-      showToast('Entry voided — stock & revenue reversed', 'warn');
-    } else {
-      // UNVOID: re-apply effects
-      s.stock = Math.max(0, s.stock - h.qty);
-      s.sold += h.qty;
-      s.revenue += h.qty * h.price;
-      if (!s.chStats[h.chan]) s.chStats[h.chan] = {txns:0,units:0,revenue:0};
-      s.chStats[h.chan].txns++;
-      s.chStats[h.chan].units += h.qty;
-      s.chStats[h.chan].revenue += h.qty * h.price;
-      h.voided = false;
-      showToast('Entry unvoided — effects restored');
-    }
-  } else {
-    const e = s.ledger[editCtx.idx];
-    if (!e) return;
-    const st = s.stores.find(st=>st.id===e.storeId);
-    if (!e.voided) {
-      // VOID consignment entry
-      if (e.type === 'Shipment' && st) { st.sent = Math.max(0,st.sent-e.qty); st.outstanding = Math.max(0,st.outstanding-e.qty); s.stock += e.qty; }
-      if (e.type === 'Sale' && st) { st.sold = Math.max(0,st.sold-e.qty); st.outstanding += e.qty; s.sold = Math.max(0,s.sold-e.qty); s.revenue = Math.max(0,s.revenue-e.amountDue); if(e.paid==='pending')st.amountOwed = Math.max(0,st.amountOwed-e.amountDue); if(s.chStats['Consignment']){s.chStats['Consignment'].txns=Math.max(0,s.chStats['Consignment'].txns-1);s.chStats['Consignment'].units=Math.max(0,s.chStats['Consignment'].units-e.qty);s.chStats['Consignment'].revenue=Math.max(0,s.chStats['Consignment'].revenue-e.amountDue);} }
-      if (e.type === 'Return' && st) { st.returned = Math.max(0,st.returned-e.qty); st.outstanding += e.qty; if(e.status==='restocked') s.stock = Math.max(0,s.stock-e.qty); }
-      e.voided = true;
-      showToast('Consignment entry voided — effects reversed', 'warn');
-    } else {
-      // UNVOID consignment entry
-      if (e.type === 'Shipment' && st) { st.sent += e.qty; st.outstanding += e.qty; s.stock = Math.max(0,s.stock-e.qty); }
-      if (e.type === 'Sale' && st) { st.sold += e.qty; st.outstanding = Math.max(0,st.outstanding-e.qty); s.sold += e.qty; s.revenue += e.amountDue; if(e.paid==='pending')st.amountOwed += e.amountDue; if(!s.chStats['Consignment'])s.chStats['Consignment']={txns:0,units:0,revenue:0}; s.chStats['Consignment'].txns++;s.chStats['Consignment'].units+=e.qty;s.chStats['Consignment'].revenue+=e.amountDue; }
-      if (e.type === 'Return' && st) { st.returned += e.qty; st.outstanding = Math.max(0,st.outstanding-e.qty); if(e.status==='restocked')s.stock += e.qty; }
-      e.voided = false;
-      showToast('Consignment entry unvoided — effects restored');
-    }
-  }
-
-  closeM('edit-entry');
-  renderAll(); updateDash(); saveState(activeBook);
-}
-
-// ── RESET
-function resetBookData(){
-  const book=getBook();
-  if(!confirm(`Reset ALL data for "${book.title}"? Orders, history and consignment will be cleared. Your Google Sheet backup is untouched.`))return;
-  if(!confirm('Last chance — this cannot be undone. Reset now?'))return;
-  states[activeBook]=defaultState(book);lastSavedHashes[activeBook]='';
-  renderAll();saveState(activeBook);showToast('✓ Book data reset. Sheet backup untouched.','warn',4000);
-}
-
-// ── MODAL HELPERS
-function openM(id){$('m-'+id).style.display='flex';const d=id==='send-books'?'send-date':id==='record-sale'?'sale-date':'ret-date';if($(d))$(d).value=today();}
-function closeM(id){$('m-'+id).style.display='none';}
-function addLog(lid,msg,type=''){const el=$(lid);el.style.display='block';const s=document.createElement('span');s.className='log-line '+type;s.textContent=new Date().toLocaleTimeString()+' · '+msg;el.appendChild(s);el.scrollTop=el.scrollHeight;}
-
-// ── GOOGLE SHEETS
-function updateSheetsBadge(){
-  [$('sheets-badge'),$('sheets-badge2')].forEach(b=>{
-    if(!b)return;
-    b.textContent=sheetsUrl?'📊 Sheets: live':'📊 Sheets: not set up';
-    b.className=sheetsUrl?'sheets-badge':'sheets-badge off';
-  });
-  const openLink=$('sheets-open-link');if(openLink){if(sheetsSpreadsheetUrl){openLink.href=sheetsSpreadsheetUrl;openLink.style.display='';}else openLink.style.display='none';}
-  const cardLink=$('open-sheet-link');if(cardLink){if(sheetsSpreadsheetUrl){cardLink.href=sheetsSpreadsheetUrl;cardLink.style.display='';}else cardLink.style.display='none';}
-}
-function connectSheets(){
-  const url=$('sheets-url-input').value.trim(),spreadUrl=($('sheets-spreadsheet-input').value||'').trim();
-  if(!url||!url.includes('script.google.com')){showToast('Paste a valid Apps Script URL','warn');return;}
-  sheetsUrl=url;localStorage.setItem('lm-sheets-url',url);
-  if(spreadUrl){sheetsSpreadsheetUrl=spreadUrl;localStorage.setItem('lm-sheets-spreadsheet-url',spreadUrl);}
-  showSheetsConnected();testSheets();showToast('✓ Google Sheets connected!');
-}
-function disconnectSheets(){if(!confirm('Disconnect?'))return;sheetsUrl='';sheetsSpreadsheetUrl='';localStorage.removeItem('lm-sheets-url');localStorage.removeItem('lm-sheets-spreadsheet-url');$('sheets-setup-card').style.display='';$('sheets-connected-card').style.display='none';updateSheetsBadge();showToast('Sheets disconnected','warn');}
-function showSheetsConnected(){$('sheets-setup-card').style.display='none';$('sheets-connected-card').style.display='';$('sheets-url-display').textContent=sheetsUrl;updateSheetsBadge();}
-function testSheets(){
-  if(!sheetsUrl)return;
-  // First verify the URL is reachable via GET
-  const btn=document.querySelector('[onclick="testSheets()"]');
-  if(btn){btn.textContent='Testing…';btn.disabled=true;}
-  fetch(sheetsUrl+'?test=1',{mode:'no-cors'})
-    .then(()=>{
-      // no-cors always resolves — now send a real test row
-      syncToSheets({type:'order',book:'Test',date:today(),num:'TEST-'+Date.now().toString().slice(-4),chan:'Test',qty:0,price:0,total:0,stockAfter:0,notes:'Connection test — check your sheet for this row'});
-      showToast('✓ Test row sent — check your Google Sheet');
-    })
-    .catch(()=>{
-      addSheetsLog('System','Test','URL unreachable — check your Apps Script URL','err');
-      showToast('⚠ Could not reach Sheets URL','warn');
-    })
-    .finally(()=>{if(btn){btn.textContent='Test';btn.disabled=false;}});
-}
-// Write queue — prevents race conditions when multiple rows fire at once
-const _sheetsQueue=[];let _sheetsWriting=false;
-async function _processQueue(){
-  if(_sheetsWriting||!_sheetsQueue.length)return;
-  _sheetsWriting=true;
-  const {payload,summary,book,type}=_sheetsQueue.shift();
-  try{
-    // Primary: fetch with no-cors (body goes to e.postData.contents in Apps Script)
-    await fetch(sheetsUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
-    addSheetsLog(book,type,summary,'ok');
-  }catch(e){
-    // Fallback: hidden iframe form POST (body goes to e.parameter.payload)
-    try{
-      const iframeId='sheets-iframe-'+Date.now();
-      const iframe=document.createElement('iframe');iframe.name=iframeId;iframe.style.display='none';document.body.appendChild(iframe);
-      setTimeout(()=>{try{document.body.removeChild(iframe);}catch(_){}},8000);
-      const form=document.createElement('form');form.method='POST';form.action=sheetsUrl;form.target=iframeId;form.style.display='none';
-      const input=document.createElement('input');input.type='hidden';input.name='payload';input.value=JSON.stringify(payload);
-      form.appendChild(input);document.body.appendChild(form);form.submit();
-      setTimeout(()=>{try{document.body.removeChild(form);}catch(_){}},2000);
-      addSheetsLog(book,type,summary,'ok');
-    }catch(e2){
-      addSheetsLog(book,type,summary+' [failed]','err');
-      console.error('Sheets write failed:',e2);
-    }
-  }
-  _sheetsWriting=false;
-  // Process next item in queue after a short gap
-  if(_sheetsQueue.length) setTimeout(_processQueue,400);
-}
-
-function syncToSheets(payload){
-  if(!sheetsUrl)return;
-  const summary=payload.type==='order'
-    ?`${payload.num} · ${payload.chan} · ${payload.qty}×`
-    :`${payload.store} · ${payload.event} · ${payload.qty}×`;
-  _sheetsQueue.push({payload,summary,book:payload.book,type:payload.type==='order'?'Order':'Consignment'});
-  _processQueue();
-}
-function addSheetsLog(book,type,summary,status){sheetsLog.unshift({time:new Date().toLocaleTimeString(),book,type,summary,status});if(sheetsLog.length>50)sheetsLog.pop();renderSheetsLog();}
-function renderSheetsLog(){
-  const b=$('sheets-log-body');
-  if(!sheetsLog.length){b.innerHTML='<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px;">No sync events yet.</td></tr>';return;}
-  b.innerHTML=sheetsLog.map(l=>`<tr><td style="white-space:nowrap;">${l.time}</td><td style="font-size:11px;color:var(--text3);">${l.book}</td><td>${l.type}</td><td style="color:var(--text2);font-size:12px;">${l.summary}</td><td><span class="log-status ${l.status}"></span>${l.status==='ok'?'<span style="color:var(--green);">Written</span>':'<span style="color:var(--red);">Failed</span>'}</td></tr>`).join('');
-}
-function copyGasCode(){navigator.clipboard.writeText($('gas-code').textContent).then(()=>showToast('✓ Code copied!'));}
-function verifyUrl(){if(!sheetsUrl)return;window.open(sheetsUrl,'_blank');}
-
-// ── MANUAL PRICE FIELD: update default to current book on tab switch
-function updateManualForm(){
-  const book=getBook();
-  $('m-sym').textContent=book.currency;
-  $('m-price').value=book.listPrice.toFixed(2);
-}
-
-// ── PASSWORD
-function tryUnlock() {
-  const inp=$('pw-input'), err=$('pw-err'), val=inp.value;
-
-  // Publisher password — full access
-  if (val === PUBLISHER_PASSWORD) {
-    sessionStorage.setItem('lm-unlocked','publisher');
-    showApp('publisher');
-    return;
-  }
-
-  // Author passwords — per-book access
-  const matchedBook = Object.values(BOOKS).find(b => b.authorPassword && b.authorPassword === val);
-  if (matchedBook) {
-    sessionStorage.setItem('lm-unlocked', 'author:'+matchedBook.id);
-    showApp('author', matchedBook.id);
-    return;
-  }
-
-  // Wrong
-  inp.value=''; err.textContent='Wrong password, try again.';
-  inp.classList.remove('bad'); void inp.offsetWidth; inp.classList.add('bad');
-  setTimeout(()=>{inp.classList.remove('bad');err.textContent='';},2000);
-}
-
-function showApp(role, bookId) {
-  $('pw-gate').style.display='none';
-  $('pw-app').style.display='';
-  if (role === 'author' || IS_AUTHOR_MODE) {
-    document.getElementById('main-app').classList.add('author-mode');
-    const wm=$('author-watermark'); if(wm){wm.textContent=BOOKS[bookId||ACTIVE_BOOK_FORCED].title+' · Author view';wm.style.display='';}
-    // Hide sheets tab for authors
-    const sheetsBtn=$('sheets-tab-btn'); if(sheetsBtn)sheetsBtn.style.display='none';
-  }
-  boot(bookId || ACTIVE_BOOK_FORCED);
-}
-
-// ── BOOT
-function boot(forcedBook) {
-  buildBookSwitcher();
-  if(sheetsUrl) showSheetsConnected();
-  updateSheetsBadge();
-
-  const initFn = () => {
-    fbReady = true;
-    if (forcedBook) {
-      // Author mode — load only this book
-      activeBook = forcedBook;
-      const book = BOOKS[forcedBook];
-      document.documentElement.style.setProperty('--book-accent', book.accent);
-      document.documentElement.style.setProperty('--book-accent-bg', book.accentBg);
-      $('tab-bar').style.display = '';
-      loadBook(forcedBook).then(()=>{ setSyncState('ok','<b>Firebase</b> · connected');$('hdr-sub').textContent=book.title+' · Author View · Synced '+new Date().toLocaleTimeString();renderAll();updateHeader();});
-    } else {
-      // Publisher — load all books, start on combined view
-      activeBook = 'all';
-      loadAllBooks();
-    }
-  };
-
-  if (window._fbReady) { initFn(); }
-  else {
-    document.addEventListener('firebase-ready', initFn);
-    setTimeout(()=>{if(!fbReady){setSyncState('error','<b>Firebase</b> · not connected');renderAll();}},4000);
+    setTimeout(()=>$('pw-input').focus(),100);
   }
 }
-
-// ── STARTUP ROUTING
-// Author mode via URL param: ?book=hound — skips password if dev=1, else author password gate
-if (IS_AUTHOR_MODE && urlParams.get('dev')==='1') {
-  showApp('author', ACTIVE_BOOK_FORCED);
-} else if (sessionStorage.getItem('lm-unlocked')==='publisher') {
-  showApp('publisher');
-} else {
-  const stored = sessionStorage.getItem('lm-unlocked');
-  if (stored && stored.startsWith('author:')) {
-    const storedBook = stored.split(':')[1];
-    if (!IS_AUTHOR_MODE || storedBook === ACTIVE_BOOK_FORCED) {
-      showApp('author', IS_AUTHOR_MODE ? ACTIVE_BOOK_FORCED : storedBook);
-    } else {
-      $('pw-input').focus();
-    }
-  } else {
-    $('pw-input').focus();
-    // Customise prompt for author URL
-    if (IS_AUTHOR_MODE) {
-      const book = BOOKS[ACTIVE_BOOK_FORCED];
-      document.querySelector('#pw-gate .sub').textContent = book.title + ' · Author Portal';
-      document.querySelector('#pw-gate .wm').textContent = 'Lyricalmyrical Books';
-    }
-  }
-}
+initGate();
 </script>
 </body>
 </html>
